@@ -96,7 +96,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
           user_id: user.id,
           [`${model}_api_key_set`]: true,
           selected_model: settings?.selected_model || 'deepseek'
-        });
+        }, { onConflict: 'user_id' });
 
       if (error) throw error;
 
@@ -160,7 +160,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
           selected_model: model,
           deepseek_api_key_set: settings?.deepseek_api_key_set || false,
           openai_api_key_set: settings?.openai_api_key_set || false
-        });
+        }, { onConflict: 'user_id' });
 
       if (error) throw error;
 
