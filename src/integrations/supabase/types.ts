@@ -110,6 +110,7 @@ export type Database = {
           deepseek_api_key_set: boolean
           id: string
           openai_api_key_set: boolean
+          segmind_api_key_set: boolean
           selected_model: string
           updated_at: string
           user_id: string
@@ -119,6 +120,7 @@ export type Database = {
           deepseek_api_key_set?: boolean
           id?: string
           openai_api_key_set?: boolean
+          segmind_api_key_set?: boolean
           selected_model?: string
           updated_at?: string
           user_id: string
@@ -128,6 +130,7 @@ export type Database = {
           deepseek_api_key_set?: boolean
           id?: string
           openai_api_key_set?: boolean
+          segmind_api_key_set?: boolean
           selected_model?: string
           updated_at?: string
           user_id?: string

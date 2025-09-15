@@ -1,0 +1,121 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
+interface ImageGenerationRequest {
+  prompts: string[];
+  quality: 'standard' | '4k';
+}
+
+interface SegmindResponse {
+  image: string; // base64 encoded image
+  seed: number;
+  finish_reason: string;
+}
+
+serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const segmindApiKey = Deno.env.get('SEGMIND_API_KEY');
+    if (!segmindApiKey) {
+      throw new Error('SEGMIND_API_KEY is not set');
+    }
+
+    const { prompts, quality }: ImageGenerationRequest = await req.json();
+
+    if (!prompts || !Array.isArray(prompts) || prompts.length === 0) {
+      return new Response(
+        JSON.stringify({ error: 'Prompts array is required' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 400 }
+      );
+    }
+
+    console.log(`Generating ${prompts.length} images with ${quality} quality`);
+
+    // Configure parameters based on quality
+    const imageConfig = quality === '4k' 
+      ? { width: 4096, height: 4096, steps: 20, guidance_scale: 7.5 }
+      : { width: 1024, height: 1024, steps: 6, guidance_scale: 7 };
+
+    // Generate images for all prompts
+    const imagePromises = prompts.map(async (prompt, index) => {
+      console.log(`Generating image ${index + 1}/${prompts.length}: ${prompt.substring(0, 50)}...`);
+      
+      try {
+        const response = await fetch('https://api.segmind.com/v1/seedream-4k', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': segmindApiKey,
+          },
+          body: JSON.stringify({
+            prompt: prompt,
+            width: imageConfig.width,
+            height: imageConfig.height,
+            steps: imageConfig.steps,
+            guidance_scale: imageConfig.guidance_scale,
+            seed: Math.floor(Math.random() * 2147483647),
+            scheduler: "DPM++ 2M",
+            output_format: "jpeg",
+            output_quality: quality === '4k' ? 95 : 85
+          }),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`Segmind API error for prompt ${index + 1}:`, response.status, errorText);
+          throw new Error(`Segmind API error: ${response.status} ${errorText}`);
+        }
+
+        const result: SegmindResponse = await response.json();
+        console.log(`Successfully generated image ${index + 1}/${prompts.length}`);
+        
+        return {
+          promptId: `prompt-${index}`,
+          imageUrl: `data:image/jpeg;base64,${result.image}`,
+          quality: quality,
+          seed: result.seed
+        };
+      } catch (error) {
+        console.error(`Error generating image ${index + 1}:`, error);
+        return {
+          promptId: `prompt-${index}`,
+          imageUrl: null,
+          quality: quality,
+          error: error.message
+        };
+      }
+    });
+
+    const results = await Promise.all(imagePromises);
+    
+    console.log(`Image generation complete. ${results.filter(r => r.imageUrl).length}/${results.length} successful`);
+
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        images: results,
+        quality: quality,
+        totalGenerated: results.filter(r => r.imageUrl).length
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
+
+  } catch (error) {
+    console.error('Error in generate-images function:', error);
+    return new Response(
+      JSON.stringify({ 
+        success: false, 
+        error: error.message || 'An unexpected error occurred' 
+      }),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }
+    );
+  }
+});

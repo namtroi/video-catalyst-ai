@@ -55,6 +55,19 @@ export interface TitleOption {
 export interface ThumbnailOption {
   id: string;
   text: string;
+  imageUrl?: string;
+  imageQuality?: 'standard' | '4k';
+}
+
+export interface ImageGenerationRequest {
+  prompts: string[];
+  quality: 'standard' | '4k';
+}
+
+export interface GeneratedImage {
+  promptId: string;
+  imageUrl: string;
+  quality: 'standard' | '4k';
 }
 
 export interface Scene {

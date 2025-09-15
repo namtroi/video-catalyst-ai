@@ -22,6 +22,7 @@ interface UserSettings {
   selected_model: AIModel;
   deepseek_api_key_set: boolean;
   openai_api_key_set: boolean;
+  segmind_api_key_set: boolean;
 }
 
 export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
@@ -32,8 +33,10 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
   const [settings, setSettings] = useState<UserSettings | null>(null);
   const [deepseekKey, setDeepseekKey] = useState('');
   const [openaiKey, setOpenaiKey] = useState('');
+  const [segmindKey, setSegmindKey] = useState('');
   const [showDeepseekKey, setShowDeepseekKey] = useState(false);
   const [showOpenaiKey, setShowOpenaiKey] = useState(false);
+  const [showSegmindKey, setShowSegmindKey] = useState(false);
 
   useEffect(() => {
     if (open && user) {
@@ -59,7 +62,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
         setSettings({
           selected_model: data.selected_model as AIModel,
           deepseek_api_key_set: data.deepseek_api_key_set,
-          openai_api_key_set: data.openai_api_key_set
+          openai_api_key_set: data.openai_api_key_set,
+          segmind_api_key_set: data.segmind_api_key_set
         });
       }
     } catch (error) {
@@ -72,7 +76,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
     }
   };
 
-  const saveApiKey = async (model: 'deepseek' | 'openai', apiKey: string) => {
+  const saveApiKey = async (model: 'deepseek' | 'openai' | 'segmind', apiKey: string) => {
     if (!user || !apiKey.trim()) return;
 
     setTestingConnection(model);
@@ -86,7 +90,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
       }
 
       // Store API key in Supabase secrets
-      const secretName = model === 'deepseek' ? 'DEEPSEEK_API_KEY' : 'OPENAI_API_KEY';
+      const secretName = model === 'deepseek' ? 'DEEPSEEK_API_KEY' : 
+                         model === 'openai' ? 'OPENAI_API_KEY' : 'SEGMIND_API_KEY';
       
       // Note: In a real implementation, you would need a separate edge function to store user-specific API keys
       // For now, we'll update the user settings to indicate the key is set
@@ -110,6 +115,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
       // Clear the input
       if (model === 'deepseek') setDeepseekKey('');
       if (model === 'openai') setOpenaiKey('');
+      if (model === 'segmind') setSegmindKey('');
       
     } catch (error) {
       console.error(`Error saving ${model} API key:`, error);
@@ -123,8 +129,27 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
     }
   };
 
-  const testApiKey = async (model: 'deepseek' | 'openai', apiKey: string): Promise<boolean> => {
+  const testApiKey = async (model: 'deepseek' | 'openai' | 'segmind', apiKey: string): Promise<boolean> => {
     try {
+      if (model === 'segmind') {
+        // Test Segmind API with a simple request
+        const response = await fetch('https://api.segmind.com/v1/seedream-4k', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': apiKey,
+          },
+          body: JSON.stringify({
+            prompt: 'test',
+            width: 1024,
+            height: 1024,
+            steps: 4,
+            guidance_scale: 7
+          }),
+        });
+        return response.ok || response.status === 429;
+      }
+
       const url = model === 'deepseek' 
         ? 'https://api.deepseek.com/chat/completions'
         : 'https://api.openai.com/v1/chat/completions';
@@ -137,7 +162,6 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
         requestBody.model = 'deepseek-chat';
         requestBody.max_tokens = 5;
       } else {
-        // Test with GPT-4o-mini for compatibility
         requestBody.model = 'gpt-4o-mini';
         requestBody.max_tokens = 5;
       }
@@ -151,7 +175,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
         body: JSON.stringify(requestBody),
       });
 
-      return response.ok || response.status === 429; // 429 = rate limit, but key is valid
+      return response.ok || response.status === 429;
     } catch {
       return false;
     }
@@ -168,7 +192,8 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
           user_id: user.id,
           selected_model: model,
           deepseek_api_key_set: settings?.deepseek_api_key_set || false,
-          openai_api_key_set: settings?.openai_api_key_set || false
+          openai_api_key_set: settings?.openai_api_key_set || false,
+          segmind_api_key_set: settings?.segmind_api_key_set || false
         }, { onConflict: 'user_id' });
 
       if (error) throw error;
@@ -357,6 +382,60 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
                     'Save & Test'
                   )}
                 </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Segmind Configuration */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Key className="h-4 w-4" />
+                Segmind API Configuration
+                {settings?.segmind_api_key_set && (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                )}
+              </CardTitle>
+              <CardDescription>
+                Get your API key from <a href="https://console.segmind.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Segmind Console</a>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    type={showSegmindKey ? "text" : "password"}
+                    placeholder="SG_..."
+                    value={segmindKey}
+                    onChange={(e) => setSegmindKey(e.target.value)}
+                    disabled={testingConnection === 'segmind'}
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 p-0"
+                    onClick={() => setShowSegmindKey(!showSegmindKey)}
+                  >
+                    {showSegmindKey ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  </Button>
+                </div>
+                <Button 
+                  onClick={() => saveApiKey('segmind', segmindKey)}
+                  disabled={!segmindKey.trim() || testingConnection === 'segmind'}
+                >
+                  {testingConnection === 'segmind' ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Testing...
+                    </>
+                  ) : (
+                    'Save & Test'
+                  )}
+                </Button>
+              </div>
+              <div className="text-sm text-muted-foreground">
+                Used for generating high-quality thumbnail images with Seedream 4.0 4K
               </div>
             </CardContent>
           </Card>
