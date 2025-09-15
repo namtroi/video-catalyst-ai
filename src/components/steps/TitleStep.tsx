@@ -5,6 +5,11 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateTitles } from '@/services/deepseekAI';
+
+interface TitleOption {
+  title_id: number;
+  title_text: string;
+}
 import { Textarea } from '@/components/ui/textarea';
 
 interface TitleStepProps {
@@ -27,7 +32,7 @@ export const TitleStep = ({
   onTitleSettingsChange 
 }: TitleStepProps) => {
   const [selectedTitle, setSelectedTitle] = useState(title || '');
-  const [titles, setTitles] = useState<string[]>([]);
+  const [titles, setTitles] = useState<TitleOption[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateTitlesFromAI = async () => {
@@ -36,9 +41,7 @@ export const TitleStep = ({
     setIsGenerating(true);
     try {
       const result = await generateTitles(topic, angle, hook, titleSettings);
-      const resultStr = String(result);
-      const titlesArray = resultStr.split('\n').filter(line => line.trim());
-      setTitles(titlesArray);
+      setTitles(result);
       toast.success('Titles generated successfully!');
     } catch (error) {
       toast.error('Failed to generate titles. Please try again.');
@@ -101,19 +104,19 @@ export const TitleStep = ({
               className="space-y-3"
             >
               {titles.map((titleOption, index) => (
-                <Card key={index} className="shadow-card hover:shadow-md transition-shadow">
+                <Card key={titleOption.title_id} className="shadow-card hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
                       <RadioGroupItem 
-                        value={titleOption} 
-                        id={`title-${index}`}
+                        value={titleOption.title_text} 
+                        id={`title-${titleOption.title_id}`}
                         className="mt-1"
                       />
                       <Label 
-                        htmlFor={`title-${index}`} 
+                        htmlFor={`title-${titleOption.title_id}`} 
                         className="flex-1 text-sm leading-relaxed cursor-pointer font-medium"
                       >
-                        {titleOption}
+                        {titleOption.title_text}
                       </Label>
                     </div>
                   </CardContent>

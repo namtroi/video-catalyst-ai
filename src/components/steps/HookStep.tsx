@@ -7,6 +7,11 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateHooks } from '@/services/deepseekAI';
 
+interface HookOption {
+  hook_id: number;
+  hook_text: string;
+}
+
 interface HookStepProps {
   topic?: string;
   angle?: string;
@@ -25,7 +30,7 @@ export const HookStep = ({
   onHookSettingsChange 
 }: HookStepProps) => {
   const [selectedHook, setSelectedHook] = useState(hook || '');
-  const [hooks, setHooks] = useState<string[]>([]);
+  const [hooks, setHooks] = useState<HookOption[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateHooksFromAI = async () => {
@@ -34,9 +39,7 @@ export const HookStep = ({
     setIsGenerating(true);
     try {
       const result = await generateHooks(topic, angle, hookSettings);
-      const resultStr = String(result);
-      const hooksArray = resultStr.split('\n').filter(line => line.trim());
-      setHooks(hooksArray);
+      setHooks(result);
       toast.success('Hooks generated successfully!');
     } catch (error) {
       toast.error('Failed to generate hooks. Please try again.');
@@ -92,19 +95,19 @@ export const HookStep = ({
               className="space-y-3"
             >
               {hooks.map((hookOption, index) => (
-                <Card key={index} className="shadow-card hover:shadow-md transition-shadow">
+                <Card key={hookOption.hook_id} className="shadow-card hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
                       <RadioGroupItem 
-                        value={hookOption} 
-                        id={`hook-${index}`}
+                        value={hookOption.hook_text} 
+                        id={`hook-${hookOption.hook_id}`}
                         className="mt-1"
                       />
                       <Label 
-                        htmlFor={`hook-${index}`} 
+                        htmlFor={`hook-${hookOption.hook_id}`} 
                         className="flex-1 text-sm leading-relaxed cursor-pointer"
                       >
-                        {hookOption}
+                        {hookOption.hook_text}
                       </Label>
                     </div>
                   </CardContent>

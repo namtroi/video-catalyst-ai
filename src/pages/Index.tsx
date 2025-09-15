@@ -180,6 +180,8 @@ export default function Index() {
             hook={project.hook}
             prompt={project.thumbnailPrompt}
             onPromptChange={(prompt) => updateProject({ thumbnailPrompt: prompt })}
+            thumbnailSettings={project.thumbnailSettings}
+            onThumbnailSettingsChange={(thumbnailSettings) => updateProject({ thumbnailSettings })}
           />
         );
       case 6:

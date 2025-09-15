@@ -5,22 +5,32 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateThumbnailPrompts } from '@/services/deepseekAI';
+import { Textarea } from '@/components/ui/textarea';
+
+interface ThumbnailOption {
+  prompt_id: number;
+  prompt_text: string;
+}
 
 interface ThumbnailStepProps {
   title?: string;
   hook?: string;
   prompt?: string;
   onPromptChange: (prompt: string) => void;
+  thumbnailSettings?: string;
+  onThumbnailSettingsChange: (settings: string) => void;
 }
 
 export const ThumbnailStep = ({ 
   title, 
   hook, 
   prompt, 
-  onPromptChange 
+  onPromptChange,
+  thumbnailSettings,
+  onThumbnailSettingsChange 
 }: ThumbnailStepProps) => {
   const [selectedPrompt, setSelectedPrompt] = useState(prompt || '');
-  const [prompts, setPrompts] = useState<string[]>([]);
+  const [prompts, setPrompts] = useState<ThumbnailOption[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePromptsFromAI = async () => {
@@ -28,10 +38,8 @@ export const ThumbnailStep = ({
     
     setIsGenerating(true);
     try {
-      const result = await generateThumbnailPrompts(title, hook);
-      const resultStr = String(result);
-      const promptsArray = resultStr.split('\n').filter(line => line.trim());
-      setPrompts(promptsArray);
+      const result = await generateThumbnailPrompts(title, hook, thumbnailSettings);
+      setPrompts(result);
       toast.success('Thumbnail prompts generated successfully!');
     } catch (error) {
       toast.error('Failed to generate thumbnail prompts. Please try again.');
@@ -87,19 +95,19 @@ export const ThumbnailStep = ({
               className="space-y-3"
             >
               {prompts.map((promptOption, index) => (
-                <Card key={index} className="shadow-card hover:shadow-md transition-shadow">
+                <Card key={promptOption.prompt_id} className="shadow-card hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
                       <RadioGroupItem 
-                        value={promptOption} 
-                        id={`prompt-${index}`}
+                        value={promptOption.prompt_text} 
+                        id={`prompt-${promptOption.prompt_id}`}
                         className="mt-1"
                       />
                       <Label 
-                        htmlFor={`prompt-${index}`} 
+                        htmlFor={`prompt-${promptOption.prompt_id}`} 
                         className="flex-1 text-sm leading-relaxed cursor-pointer"
                       >
-                        {promptOption}
+                        {promptOption.prompt_text}
                       </Label>
                     </div>
                   </CardContent>
@@ -121,6 +129,18 @@ export const ThumbnailStep = ({
         >
           {isGenerating ? "Generating..." : "Generate Thumbnail Prompts"}
         </Button>
+
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Custom Instructions (optional)
+          </label>
+          <Textarea
+            value={thumbnailSettings || ''}
+            onChange={(e) => onThumbnailSettingsChange?.(e.target.value)}
+            placeholder="e.g., Use bright colors, include faces, add text overlay..."
+            className="min-h-[80px] resize-y"
+          />
+        </div>
       </div>
     </div>
   );
