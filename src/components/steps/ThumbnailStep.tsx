@@ -137,8 +137,8 @@ export const ThumbnailStep = ({
 
   const getQualityInfo = (quality: 'standard' | '4k') => {
     return quality === '4k' 
-      ? { label: '4K High Quality', size: '4096×4096', cost: 'Higher cost' }
-      : { label: 'Standard Quality', size: '1024×1024', cost: 'Lower cost' };
+      ? { label: '4K High Quality', size: '2560×1440', cost: 'Higher cost' }
+      : { label: 'YouTube Standard', size: '1280×720', cost: 'Lower cost' };
   };
 
   return (
@@ -205,73 +205,79 @@ export const ThumbnailStep = ({
                         className="mt-1"
                       />
                       <div className="flex-1">
-                        <Label 
-                          htmlFor={`prompt-${promptOption.id}`} 
-                          className="text-sm leading-relaxed cursor-pointer block mb-3"
-                        >
-                          {promptOption.text}
-                        </Label>
-                        
-                        {/* Image Preview Section */}
-                        <div className="mt-3">
-                          {imageLoadingStates[promptOption.id] ? (
-                            <div className="flex items-center justify-center h-32 bg-muted rounded-lg border-2 border-dashed">
-                              <div className="text-center">
-                                <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
-                                <div className="text-sm text-muted-foreground">Generating image...</div>
-                              </div>
-                            </div>
-                          ) : promptOption.imageUrl ? (
-                            <div className="relative group">
-                              <img 
-                                src={promptOption.imageUrl}
-                                alt={promptOption.text}
-                                className="w-full h-32 object-cover rounded-lg border"
-                                loading="lazy"
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      viewImageFullSize(promptOption.imageUrl!);
-                                    }}
-                                  >
-                                    <Eye className="w-3 h-3 mr-1" />
-                                    View
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      downloadImage(promptOption.imageUrl!, promptOption.text);
-                                    }}
-                                  >
-                                    <Download className="w-3 h-3 mr-1" />
-                                    Download
-                                  </Button>
+                        {/* Side-by-side layout for prompt and image */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {/* Prompt Text */}
+                          <div className="space-y-2">
+                            <Label 
+                              htmlFor={`prompt-${promptOption.id}`} 
+                              className="text-sm leading-relaxed cursor-pointer block"
+                            >
+                              {promptOption.text}
+                            </Label>
+                          </div>
+                          
+                          {/* Image Preview */}
+                          <div className="aspect-video">
+                            {imageLoadingStates[promptOption.id] ? (
+                              <div className="flex items-center justify-center h-full bg-muted rounded-lg border-2 border-dashed">
+                                <div className="text-center">
+                                  <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2" />
+                                  <div className="text-sm text-muted-foreground">Generating...</div>
                                 </div>
                               </div>
-                              {promptOption.imageQuality && (
-                                <Badge 
-                                  variant={promptOption.imageQuality === '4k' ? 'default' : 'secondary'}
-                                  className="absolute top-2 right-2"
-                                >
-                                  {promptOption.imageQuality === '4k' ? '4K' : 'Standard'}
-                                </Badge>
-                              )}
-                            </div>
-                          ) : (
-                            <div className="flex items-center justify-center h-32 bg-muted rounded-lg border-2 border-dashed">
-                              <div className="text-center">
-                                <Image className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                                <div className="text-sm text-muted-foreground">No image generated yet</div>
+                            ) : promptOption.imageUrl ? (
+                              <div className="relative group h-full">
+                                <img 
+                                  src={promptOption.imageUrl}
+                                  alt={promptOption.text}
+                                  className="w-full h-full object-cover rounded-lg border"
+                                  loading="lazy"
+                                />
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                                  <div className="flex gap-2">
+                                    <Button
+                                      size="sm"
+                                      variant="secondary"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        viewImageFullSize(promptOption.imageUrl!);
+                                      }}
+                                    >
+                                      <Eye className="w-3 h-3 mr-1" />
+                                      View
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      variant="secondary"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        downloadImage(promptOption.imageUrl!, promptOption.text);
+                                      }}
+                                    >
+                                      <Download className="w-3 h-3 mr-1" />
+                                      Download
+                                    </Button>
+                                  </div>
+                                </div>
+                                {promptOption.imageQuality && (
+                                  <Badge 
+                                    variant={promptOption.imageQuality === '4k' ? 'default' : 'secondary'}
+                                    className="absolute top-2 right-2"
+                                  >
+                                    {promptOption.imageQuality === '4k' ? '4K' : 'YouTube'}
+                                  </Badge>
+                                )}
                               </div>
-                            </div>
-                          )}
+                            ) : (
+                              <div className="flex items-center justify-center h-full bg-muted rounded-lg border-2 border-dashed">
+                                <div className="text-center">
+                                  <Image className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                                  <div className="text-sm text-muted-foreground">No image yet</div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -313,8 +319,8 @@ export const ThumbnailStep = ({
                     <SelectItem value="standard">
                       <div className="flex items-center justify-between w-full">
                         <div>
-                          <div className="font-medium">Standard Quality</div>
-                          <div className="text-xs text-muted-foreground">1024×1024 • Lower cost • Faster</div>
+                          <div className="font-medium">YouTube Standard</div>
+                          <div className="text-xs text-muted-foreground">1280×720 • Lower cost • Faster</div>
                         </div>
                       </div>
                     </SelectItem>
@@ -322,7 +328,7 @@ export const ThumbnailStep = ({
                       <div className="flex items-center justify-between w-full">
                         <div>
                           <div className="font-medium">4K High Quality</div>
-                          <div className="text-xs text-muted-foreground">4096×4096 • Higher cost • Best quality</div>
+                          <div className="text-xs text-muted-foreground">2560×1440 • Higher cost • Best quality</div>
                         </div>
                       </div>
                     </SelectItem>

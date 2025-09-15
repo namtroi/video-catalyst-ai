@@ -35,10 +35,10 @@ serve(async (req) => {
 
     console.log(`Generating ${prompts.length} images with ${quality} quality`);
 
-    // Configure parameters based on quality
+    // Configure parameters based on quality for YouTube thumbnails (16:9 aspect ratio)
     const imageConfig = quality === '4k' 
-      ? { width: 4096, height: 4096, steps: 20 }
-      : { width: 1024, height: 1024, steps: 6 };
+      ? { width: 2560, height: 1440, steps: 20 }
+      : { width: 1280, height: 720, steps: 6 };
 
     // Generate images for all prompts
     const imagePromises = prompts.map(async (prompt, index) => {
