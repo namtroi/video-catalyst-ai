@@ -162,6 +162,18 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                 />
               </div>
               
+              <div className="space-y-4 text-sm text-muted-foreground mb-4 p-3 bg-muted/50 rounded-md">
+                <p><strong>Variable Guide:</strong> Use these variables in your custom instructions:</p>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div><code>{"{topic}"}</code> - Available in Angle, Hook, Title steps</div>
+                  <div><code>{"{angle}"}</code> - Available in Hook, Title steps</div>
+                  <div><code>{"{hook}"}</code> - Available in Title, Thumbnail, Script steps</div>
+                  <div><code>{"{title}"}</code> - Available in Thumbnail, Script steps</div>
+                  <div><code>{"{script}"}</code> - Available in Scenes step</div>
+                </div>
+                <p><em>Leave empty to use default prompts. Custom instructions replace default prompts entirely.</em></p>
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="topic_settings">Topic Instructions</Label>
@@ -169,9 +181,10 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                     id="topic_settings"
                     value={formData.topic_settings}
                     onChange={(e) => setFormData({...formData, topic_settings: e.target.value})}
-                    placeholder="Custom instructions for topic generation..."
+                    placeholder="e.g. Generate trending tech topics for educational content..."
                     className="min-h-[80px]"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">No variables available (first step)</p>
                 </div>
                 
                 <div>
@@ -180,9 +193,10 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                     id="angle_settings"
                     value={formData.angle_settings}
                     onChange={(e) => setFormData({...formData, angle_settings: e.target.value})}
-                    placeholder="Custom instructions for angle generation..."
+                    placeholder="e.g. Create 3 unique angles for {topic} targeting beginners..."
                     className="min-h-[80px]"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Available: <code>{"{topic}"}</code></p>
                 </div>
                 
                 <div>
@@ -191,9 +205,10 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                     id="hook_settings"
                     value={formData.hook_settings}
                     onChange={(e) => setFormData({...formData, hook_settings: e.target.value})}
-                    placeholder="Custom instructions for hook generation..."
+                    placeholder="e.g. Create engaging hooks for {topic} with {angle} approach..."
                     className="min-h-[80px]"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Available: <code>{"{topic}"}</code>, <code>{"{angle}"}</code></p>
                 </div>
                 
                 <div>
@@ -202,9 +217,10 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                     id="title_settings"
                     value={formData.title_settings}
                     onChange={(e) => setFormData({...formData, title_settings: e.target.value})}
-                    placeholder="Custom instructions for title generation..."
+                    placeholder="e.g. Generate SEO titles for {topic} using {angle} and {hook}..."
                     className="min-h-[80px]"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Available: <code>{"{topic}"}</code>, <code>{"{angle}"}</code>, <code>{"{hook}"}</code></p>
                 </div>
                 
                 <div>
@@ -213,9 +229,10 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                     id="thumbnail_settings"
                     value={formData.thumbnail_settings}
                     onChange={(e) => setFormData({...formData, thumbnail_settings: e.target.value})}
-                    placeholder="Custom instructions for thumbnail generation..."
+                    placeholder="e.g. Create thumbnail descriptions for {title} with {hook} style..."
                     className="min-h-[80px]"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Available: <code>{"{title}"}</code>, <code>{"{hook}"}</code></p>
                 </div>
                 
                 <div>
@@ -224,9 +241,10 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                     id="script_settings"
                     value={formData.script_settings}
                     onChange={(e) => setFormData({...formData, script_settings: e.target.value})}
-                    placeholder="Custom instructions for script generation..."
+                    placeholder="e.g. Write script for {title} starting with {hook}..."
                     className="min-h-[80px]"
                   />
+                  <p className="text-xs text-muted-foreground mt-1">Available: <code>{"{title}"}</code>, <code>{"{hook}"}</code></p>
                 </div>
               </div>
               
@@ -236,9 +254,10 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                   id="production_settings"
                   value={formData.production_settings}
                   onChange={(e) => setFormData({...formData, production_settings: e.target.value})}
-                  placeholder="Custom instructions for production generation..."
+                  placeholder="e.g. Break down {script} into scenes with visual prompts..."
                   className="min-h-[80px]"
                 />
+                <p className="text-xs text-muted-foreground mt-1">Available: <code>{"{script}"}</code></p>
               </div>
               
               <div className="flex justify-end space-x-2">

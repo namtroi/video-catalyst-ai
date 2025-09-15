@@ -111,8 +111,9 @@ async function generateWithDeepseek(type: string, apiKey: string, customSettings
       throw new Error('Invalid generation type');
   }
 
-  if (customSettings) {
-    prompt += `\n\nAdditional Instructions: ${customSettings}`;
+  // Use custom settings as full prompt if provided, otherwise use default prompts
+  if (customSettings && customSettings.trim()) {
+    prompt = customSettings;
   }
 
   const response = await fetch('https://api.deepseek.com/chat/completions', {
@@ -171,8 +172,9 @@ async function generateWithOpenAI(type: string, modelName: string, apiKey: strin
       throw new Error('Invalid generation type');
   }
 
-  if (customSettings) {
-    prompt += `\n\nAdditional Instructions: ${customSettings}`;
+  // Use custom settings as full prompt if provided, otherwise use default prompts
+  if (customSettings && customSettings.trim()) {
+    prompt = customSettings;
   }
 
   // Build request body based on model
