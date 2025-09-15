@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Trash2, Edit, Plus } from 'lucide-react';
+import { Trash2, Edit, Plus, Copy } from 'lucide-react';
 import { Template } from '@/types';
 import { TemplateService } from '@/services/templateService';
 import { useToast } from '@/components/ui/use-toast';
@@ -125,6 +125,47 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
       toast({
         title: "Error",
         description: "Failed to delete template",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDuplicate = async (template: Template) => {
+    const generateUniqueName = (baseName: string) => {
+      const existingNames = templates.map(t => t.name);
+      let newName = `${baseName} (Copy)`;
+      let counter = 2;
+      
+      while (existingNames.includes(newName)) {
+        newName = `${baseName} (Copy ${counter})`;
+        counter++;
+      }
+      
+      return newName;
+    };
+
+    try {
+      const duplicateData = {
+        name: generateUniqueName(template.name),
+        topic_settings: template.topic_settings,
+        angle_settings: template.angle_settings,
+        hook_settings: template.hook_settings,
+        title_settings: template.title_settings,
+        thumbnail_settings: template.thumbnail_settings,
+        script_settings: template.script_settings,
+        production_settings: template.production_settings,
+      };
+      
+      await TemplateService.createTemplate(duplicateData);
+      toast({
+        title: "Success",
+        description: "Template duplicated successfully",
+      });
+      await loadTemplates();
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to duplicate template",
         variant: "destructive",
       });
     }
@@ -298,6 +339,13 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
                       onClick={() => onTemplateSelect(template)}
                     >
                       Use Template
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDuplicate(template)}
+                    >
+                      <Copy className="w-4 h-4" />
                     </Button>
                     <Button
                       variant="outline"
