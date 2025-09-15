@@ -10,11 +10,7 @@ interface ImageGenerationRequest {
   quality: 'standard' | '4k';
 }
 
-interface SegmindResponse {
-  image: string; // base64 encoded image
-  seed: number;
-  finish_reason: string;
-}
+// Segmind API returns binary image data directly
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -70,14 +66,19 @@ serve(async (req) => {
           throw new Error(`Segmind API error: ${response.status} ${errorText}`);
         }
 
-        const result: SegmindResponse = await response.json();
+        // Get binary image data and convert to base64
+        const arrayBuffer = await response.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const binaryString = String.fromCharCode(...uint8Array);
+        const base64Data = btoa(binaryString);
+        
         console.log(`Successfully generated image ${index + 1}/${prompts.length}`);
         
         return {
           promptId: `prompt-${index}`,
-          imageUrl: `data:image/jpeg;base64,${result.image}`,
+          imageUrl: `data:image/jpeg;base64,${base64Data}`,
           quality: quality,
-          seed: result.seed
+          seed: Math.floor(Math.random() * 2147483647)
         };
       } catch (error) {
         console.error(`Error generating image ${index + 1}:`, error);
