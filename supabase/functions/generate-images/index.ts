@@ -41,8 +41,8 @@ serve(async (req) => {
 
     // Configure parameters based on quality
     const imageConfig = quality === '4k' 
-      ? { width: 4096, height: 4096, steps: 20, guidance_scale: 7.5 }
-      : { width: 1024, height: 1024, steps: 6, guidance_scale: 7 };
+      ? { width: 4096, height: 4096, steps: 20 }
+      : { width: 1024, height: 1024, steps: 6 };
 
     // Generate images for all prompts
     const imagePromises = prompts.map(async (prompt, index) => {
@@ -60,11 +60,7 @@ serve(async (req) => {
             width: imageConfig.width,
             height: imageConfig.height,
             steps: imageConfig.steps,
-            guidance_scale: imageConfig.guidance_scale,
-            seed: Math.floor(Math.random() * 2147483647),
-            scheduler: "DPM++ 2M",
-            output_format: "jpeg",
-            output_quality: quality === '4k' ? 95 : 85
+            seed: Math.floor(Math.random() * 2147483647)
           }),
         });
 

@@ -144,7 +144,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
             width: 1024,
             height: 1024,
             steps: 4,
-            guidance_scale: 7
+            seed: Math.floor(Math.random() * 2147483647)
           }),
         });
         return response.ok || response.status === 429;
