@@ -5,9 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateTitles } from '@/services/deepseekAI';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Textarea } from '@/components/ui/textarea';
-import { ChevronDown } from 'lucide-react';
 
 interface TitleStepProps {
   topic?: string;
@@ -54,11 +52,6 @@ export const TitleStep = ({
     onTitleChange(selectedTitle);
   };
 
-  useEffect(() => {
-    if (topic && angle && hook && titles.length === 0) {
-      generateTitlesFromAI();
-    }
-  }, [topic, angle, hook]);
 
   return (
     <div className="space-y-6">
@@ -140,30 +133,20 @@ export const TitleStep = ({
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? "Regenerating..." : "Re-generate Titles"}
+          {isGenerating ? "Generating..." : "Generate Titles"}
         </Button>
 
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
-              Customize Generation Instructions
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2 mt-2">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                Custom Instructions (optional)
-              </label>
-              <Textarea
-                value={titleSettings || ''}
-                onChange={(e) => onTitleSettingsChange(e.target.value)}
-                placeholder="e.g., Keep it under 60 characters, include numbers, use power words..."
-                className="min-h-[80px] resize-y"
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Custom Instructions (optional)
+          </label>
+          <Textarea
+            value={titleSettings || ''}
+            onChange={(e) => onTitleSettingsChange(e.target.value)}
+            placeholder="e.g., Keep it under 60 characters, include numbers, use power words..."
+            className="min-h-[80px] resize-y"
+          />
+        </div>
       </div>
     </div>
   );

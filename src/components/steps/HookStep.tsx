@@ -6,8 +6,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateHooks } from '@/services/deepseekAI';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
 
 interface HookStepProps {
   topic?: string;
@@ -52,11 +50,6 @@ export const HookStep = ({
     onHookChange(selectedHook);
   };
 
-  useEffect(() => {
-    if (topic && angle && hooks.length === 0) {
-      generateHooksFromAI();
-    }
-  }, [topic, angle]);
 
   return (
     <div className="space-y-6">
@@ -131,30 +124,20 @@ export const HookStep = ({
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? "Regenerating..." : "Re-generate Hooks"}
+          {isGenerating ? "Generating..." : "Generate Hooks"}
         </Button>
 
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
-              Customize Generation Instructions
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2 mt-2">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                Custom Instructions (optional)
-              </label>
-              <Textarea
-                value={hookSettings || ''}
-                onChange={(e) => onHookSettingsChange(e.target.value)}
-                placeholder="e.g., Make it emotional, use curiosity gap, target specific audience..."
-                className="min-h-[80px] resize-y"
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Custom Instructions (optional)
+          </label>
+          <Textarea
+            value={hookSettings || ''}
+            onChange={(e) => onHookSettingsChange(e.target.value)}
+            placeholder="e.g., Make it emotional, use curiosity gap, target specific audience..."
+            className="min-h-[80px] resize-y"
+          />
+        </div>
       </div>
     </div>
   );

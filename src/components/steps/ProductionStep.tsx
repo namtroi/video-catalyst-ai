@@ -4,8 +4,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { generateImageVideoPrompts } from '@/services/deepseekAI';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
 
 interface ProductionStepProps {
   script?: string;
@@ -51,12 +49,10 @@ export const ProductionStep = ({
   };
 
   useEffect(() => {
-    if (script && !imageVideoPrompts) {
-      generatePromptsFromAI();
-    } else if (imageVideoPrompts) {
+    if (imageVideoPrompts) {
       setGeneratedPrompts(imageVideoPrompts);
     }
-  }, [script, imageVideoPrompts]);
+  }, [imageVideoPrompts]);
 
   return (
     <div className="space-y-6">
@@ -101,30 +97,20 @@ export const ProductionStep = ({
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? "Regenerating..." : "Re-generate Prompts"}
+          {isGenerating ? "Generating..." : "Generate Production Prompts"}
         </Button>
 
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
-              Customize Generation Instructions
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2 mt-2">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                Custom Instructions (optional)
-              </label>
-              <Textarea
-                value={productionSettings || ''}
-                onChange={(e) => onProductionSettingsChange(e.target.value)}
-                placeholder="e.g., Focus on high-quality visuals, include specific shot types, target specific mood..."
-                className="min-h-[80px] resize-y"
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Custom Instructions (optional)
+          </label>
+          <Textarea
+            value={productionSettings || ''}
+            onChange={(e) => onProductionSettingsChange(e.target.value)}
+            placeholder="e.g., Focus on high-quality visuals, include specific shot types, target specific mood..."
+            className="min-h-[80px] resize-y"
+          />
+        </div>
 
         {/* Show Summary Button */}
         <Button

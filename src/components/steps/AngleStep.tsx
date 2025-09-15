@@ -6,8 +6,6 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateAngles } from '@/services/deepseekAI';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
 
 interface AngleStepProps {
   topic?: string;
@@ -50,11 +48,6 @@ export const AngleStep = ({
     onAngleChange(selectedAngle);
   };
 
-  useEffect(() => {
-    if (topic && angles.length === 0) {
-      generateAnglesFromAI();
-    }
-  }, [topic]);
 
   return (
     <div className="space-y-6">
@@ -120,30 +113,20 @@ export const AngleStep = ({
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? "Regenerating..." : "Re-generate Angles"}
+          {isGenerating ? "Generating..." : "Generate Angles"}
         </Button>
 
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
-              Customize Generation Instructions
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2 mt-2">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                Custom Instructions (optional)
-              </label>
-              <Textarea
-                value={angleSettings || ''}
-                onChange={(e) => onAngleSettingsChange(e.target.value)}
-                placeholder="e.g., Focus on controversial takes, make it educational, target beginners..."
-                className="min-h-[80px] resize-y"
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Custom Instructions (optional)
+          </label>
+          <Textarea
+            value={angleSettings || ''}
+            onChange={(e) => onAngleSettingsChange(e.target.value)}
+            placeholder="e.g., Focus on controversial takes, make it educational, target beginners..."
+            className="min-h-[80px] resize-y"
+          />
+        </div>
       </div>
     </div>
   );

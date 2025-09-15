@@ -45,11 +45,6 @@ export const ThumbnailStep = ({
     onPromptChange(selectedPrompt);
   };
 
-  useEffect(() => {
-    if (title && hook && prompts.length === 0) {
-      generatePromptsFromAI();
-    }
-  }, [title, hook]);
 
   return (
     <div className="space-y-6">
@@ -124,7 +119,7 @@ export const ThumbnailStep = ({
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? "Regenerating..." : "Re-generate Prompts"}
+          {isGenerating ? "Generating..." : "Generate Thumbnail Prompts"}
         </Button>
       </div>
     </div>

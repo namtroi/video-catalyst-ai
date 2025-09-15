@@ -4,8 +4,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { generateTopic } from '@/services/deepseekAI';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { ChevronDown } from 'lucide-react';
 
 interface TopicStepProps {
   topic?: string;
@@ -102,27 +100,17 @@ export const TopicStep = ({
           </Card>
         )}
 
-        <Collapsible>
-          <CollapsibleTrigger asChild>
-            <Button variant="outline" className="w-full justify-between">
-              Customize Generation Instructions
-              <ChevronDown className="h-4 w-4" />
-            </Button>
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2 mt-2">
-            <div>
-              <label className="text-sm font-medium text-foreground mb-2 block">
-                Custom Instructions (optional)
-              </label>
-              <Textarea
-                value={topicSettings || ''}
-                onChange={(e) => onTopicSettingsChange(e.target.value)}
-                placeholder="e.g., Focus on trending topics in technology, make it beginner-friendly..."
-                className="min-h-[80px] resize-y"
-              />
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Custom Instructions (optional)
+          </label>
+          <Textarea
+            value={topicSettings || ''}
+            onChange={(e) => onTopicSettingsChange(e.target.value)}
+            placeholder="e.g., Focus on trending topics in technology, make it beginner-friendly..."
+            className="min-h-[80px] resize-y"
+          />
+        </div>
       </div>
     </div>
   );
