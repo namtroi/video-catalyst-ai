@@ -55,11 +55,16 @@ serve(async (req) => {
         throw new Error('Deepseek API key not configured');
       }
       result = await generateWithDeepseek(type, deepseekApiKey, customSettings, topic, angle, hook, title, script);
-    } else if (model === 'openai') {
+    } else if (model === 'openai-gpt4o-mini') {
       if (!openaiApiKey) {
         throw new Error('OpenAI API key not configured');
       }
-      result = await generateWithOpenAI(type, openaiApiKey, customSettings, topic, angle, hook, title, script);
+      result = await generateWithOpenAI(type, 'gpt-4o-mini', openaiApiKey, customSettings, topic, angle, hook, title, script);
+    } else if (model === 'openai-gpt5') {
+      if (!openaiApiKey) {
+        throw new Error('OpenAI API key not configured');
+      }
+      result = await generateWithOpenAI(type, 'gpt-5-2025-08-07', openaiApiKey, customSettings, topic, angle, hook, title, script);
     } else {
       throw new Error('Invalid model specified');
     }
@@ -136,7 +141,7 @@ async function generateWithDeepseek(type: string, apiKey: string, customSettings
   return parseResponse(type, content);
 }
 
-async function generateWithOpenAI(type: string, apiKey: string, customSettings?: string, topic?: string, angle?: string, hook?: string, title?: string, script?: string) {
+async function generateWithOpenAI(type: string, modelName: string, apiKey: string, customSettings?: string, topic?: string, angle?: string, hook?: string, title?: string, script?: string) {
   const prompts = getOpenAIPrompts();
   let prompt = '';
 
@@ -170,20 +175,31 @@ async function generateWithOpenAI(type: string, apiKey: string, customSettings?:
     prompt += `\n\nAdditional Instructions: ${customSettings}`;
   }
 
+  // Build request body based on model
+  const requestBody: any = {
+    model: modelName,
+    messages: [
+      { role: 'system', content: 'You are a helpful YouTube content creation assistant. Always follow the exact format requested.' },
+      { role: 'user', content: prompt }
+    ],
+  };
+
+  // Use correct parameters based on model
+  if (modelName === 'gpt-5-2025-08-07') {
+    requestBody.max_completion_tokens = 2000;
+    // GPT-5 doesn't support temperature parameter
+  } else {
+    requestBody.max_tokens = 2000;
+    requestBody.temperature = 0.7;
+  }
+
   const response = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       'Authorization': `Bearer ${apiKey}`,
     },
-    body: JSON.stringify({
-      model: 'gpt-4o-mini',
-      messages: [
-        { role: 'system', content: 'You are a helpful YouTube content creation assistant. Always follow the exact format requested.' },
-        { role: 'user', content: prompt }
-      ],
-      max_tokens: 2000,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   const data = await response.json();

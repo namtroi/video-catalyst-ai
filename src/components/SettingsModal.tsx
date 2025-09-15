@@ -166,9 +166,13 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
 
       await loadUserSettings();
 
+      const modelName = model === 'deepseek' ? 'Deepseek Chat' : 
+                        model === 'openai-gpt4o-mini' ? 'OpenAI GPT-4o Mini' : 
+                        'OpenAI GPT-5';
+      
       toast({
         title: "Model Updated",
-        description: `Switched to ${model === 'deepseek' ? 'Deepseek' : 'ChatGPT'}`,
+        description: `Switched to ${modelName}`,
       });
     } catch (error) {
       console.error('Error updating selected model:', error);
@@ -199,39 +203,101 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
           {/* Model Selection */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Active Model</CardTitle>
+              <CardTitle className="text-lg">AI Model Selection</CardTitle>
               <CardDescription>
                 Choose which AI model to use for content generation
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Select 
-                value={settings?.selected_model || 'deepseek'} 
-                onValueChange={updateSelectedModel}
-                disabled={loading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select AI model" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="deepseek">
+              <div className="grid gap-4">
+                {/* Deepseek Model Card */}
+                <div 
+                  className={`p-4 border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors ${
+                    settings?.selected_model === 'deepseek' ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
+                  onClick={() => updateSelectedModel('deepseek')}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">Deepseek Chat</h4>
+                        <Badge variant="secondary" className="text-xs">Fast & Affordable</Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>Input: $0.27/1M tokens (cache miss), $0.07/1M tokens (cache hit)</div>
+                        <div>Output: $1.10/1M tokens</div>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2">
-                      <span>Deepseek</span>
                       <Badge variant={settings?.deepseek_api_key_set ? "default" : "secondary"}>
                         {settings?.deepseek_api_key_set ? 'Configured' : 'Not configured'}
                       </Badge>
+                      {settings?.selected_model === 'deepseek' && (
+                        <div className="w-2 h-2 bg-primary rounded-full" />
+                      )}
                     </div>
-                  </SelectItem>
-                  <SelectItem value="openai">
+                  </div>
+                </div>
+
+                {/* OpenAI GPT-4o Mini Model Card */}
+                <div 
+                  className={`p-4 border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors ${
+                    settings?.selected_model === 'openai-gpt4o-mini' ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
+                  onClick={() => updateSelectedModel('openai-gpt4o-mini')}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">OpenAI GPT-4o Mini</h4>
+                        <Badge variant="secondary" className="text-xs">Balanced</Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>Input: $0.15/1M tokens</div>
+                        <div>Output: $0.60/1M tokens</div>
+                      </div>
+                    </div>
                     <div className="flex items-center gap-2">
-                      <span>ChatGPT (OpenAI)</span>
                       <Badge variant={settings?.openai_api_key_set ? "default" : "secondary"}>
                         {settings?.openai_api_key_set ? 'Configured' : 'Not configured'}
                       </Badge>
+                      {settings?.selected_model === 'openai-gpt4o-mini' && (
+                        <div className="w-2 h-2 bg-primary rounded-full" />
+                      )}
                     </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                  </div>
+                </div>
+
+                {/* OpenAI GPT-5 Model Card */}
+                <div 
+                  className={`p-4 border rounded-lg cursor-pointer hover:bg-accent/50 transition-colors ${
+                    settings?.selected_model === 'openai-gpt5' ? 'border-primary bg-primary/5' : 'border-border'
+                  }`}
+                  onClick={() => updateSelectedModel('openai-gpt5')}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold">OpenAI GPT-5</h4>
+                        <Badge variant="default" className="text-xs">Highest Quality</Badge>
+                      </div>
+                      <div className="text-sm text-muted-foreground space-y-1">
+                        <div>Input: $1.25/1M tokens</div>
+                        <div>Cached input: $0.125/1M tokens</div>
+                        <div>Output: $10.00/1M tokens</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={settings?.openai_api_key_set ? "default" : "secondary"}>
+                        {settings?.openai_api_key_set ? 'Configured' : 'Not configured'}
+                      </Badge>
+                      {settings?.selected_model === 'openai-gpt5' && (
+                        <div className="w-2 h-2 bg-primary rounded-full" />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
             </CardContent>
           </Card>
 

@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { AngleOption, HookOption, TitleOption, ThumbnailOption, ScenesResponse } from '@/types';
 
-export type AIModel = 'deepseek' | 'openai';
+export type AIModel = 'deepseek' | 'openai-gpt4o-mini' | 'openai-gpt5';
 
 interface AIGenerationRequest {
   type: 'topic' | 'angles' | 'hooks' | 'titles' | 'thumbnails' | 'script' | 'scenes';
