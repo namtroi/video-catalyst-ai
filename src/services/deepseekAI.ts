@@ -51,8 +51,17 @@ export const generateTopic = async (customSettings?: string): Promise<string> =>
   return generateWithDeepseek(prompt, customSettings);
 };
 
-export const generateAngles = async (topic: string, customSettings?: string): Promise<string[]> => {
-  const prompt = `From the topic '${topic}', generate 3 unique angles or viewpoints for a YouTube video (8-15 min). Each angle should be concise (1-2 sentences) and engaging. Format as numbered list.
+interface AngleOption {
+  id: number;
+  description: string;
+}
+
+interface AnglesResponse {
+  angles: AngleOption[];
+}
+
+export const generateAngles = async (topic: string, customSettings?: string): Promise<AngleOption[]> => {
+  const prompt = `From the topic '${topic}', generate 3 unique angles or viewpoints for a YouTube video (8-15 min). Each angle should be concise (1-2 sentences) and engaging.
   
   Respond ONLY with a valid JSON object in this exact structure:
 {
@@ -72,14 +81,32 @@ export const generateAngles = async (topic: string, customSettings?: string): Pr
   ]
 }
 
-Do not include any additional text, explanations, or markdown outside the JSON.
+Do not include any additional text, explanations, or markdown outside the JSON.`;
   
-  `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
-  // Parse the response into an array
-  const lines = response.split('\n').filter(line => line.trim());
-  return lines.slice(0, 3).map(line => line.replace(/^\d+\.\s*/, '').trim());
+  try {
+    // Clean the response to extract JSON
+    const cleanedResponse = response.trim();
+    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? jsonMatch[0] : cleanedResponse;
+    
+    const parsedData: AnglesResponse = JSON.parse(jsonString);
+    
+    if (!parsedData.angles || !Array.isArray(parsedData.angles)) {
+      throw new Error('Invalid angles format in response');
+    }
+    
+    return parsedData.angles.slice(0, 3);
+  } catch (error) {
+    console.error('Failed to parse angles JSON:', error);
+    // Fallback to line parsing if JSON fails
+    const lines = response.split('\n').filter(line => line.trim());
+    return lines.slice(0, 3).map((line, index) => ({
+      id: index + 1,
+      description: line.replace(/^\d+\.\s*/, '').trim()
+    }));
+  }
 };
 
 export const generateHooks = async (topic: string, angle: string, customSettings?: string): Promise<string[]> => {

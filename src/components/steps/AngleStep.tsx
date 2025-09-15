@@ -7,6 +7,11 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateAngles } from '@/services/deepseekAI';
 
+interface AngleOption {
+  id: number;
+  description: string;
+}
+
 interface AngleStepProps {
   topic?: string;
   angle?: string;
@@ -23,7 +28,7 @@ export const AngleStep = ({
   onAngleSettingsChange 
 }: AngleStepProps) => {
   const [selectedAngle, setSelectedAngle] = useState(angle || '');
-  const [angles, setAngles] = useState<string[]>([]);
+  const [angles, setAngles] = useState<AngleOption[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateAnglesFromAI = async () => {
@@ -32,9 +37,7 @@ export const AngleStep = ({
     setIsGenerating(true);
     try {
       const result = await generateAngles(topic, angleSettings);
-      const resultStr = String(result);
-      const anglesArray = resultStr.split('\n').filter(line => line.trim());
-      setAngles(anglesArray);
+      setAngles(result);
       toast.success('Angles generated successfully!');
     } catch (error) {
       toast.error('Failed to generate angles. Please try again.');
@@ -80,20 +83,20 @@ export const AngleStep = ({
               onValueChange={handleSelectAngle}
               className="space-y-3"
             >
-              {angles.map((angleOption, index) => (
-                <Card key={index} className="shadow-card hover:shadow-md transition-shadow">
+              {angles.map((angleOption) => (
+                <Card key={angleOption.id} className="shadow-card hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
                       <RadioGroupItem 
-                        value={angleOption} 
-                        id={`angle-${index}`}
+                        value={angleOption.description} 
+                        id={`angle-${angleOption.id}`}
                         className="mt-1"
                       />
                       <Label 
-                        htmlFor={`angle-${index}`} 
+                        htmlFor={`angle-${angleOption.id}`} 
                         className="flex-1 text-sm leading-relaxed cursor-pointer"
                       >
-                        {angleOption}
+                        {angleOption.description}
                       </Label>
                     </div>
                   </CardContent>
