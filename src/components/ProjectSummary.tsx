@@ -3,6 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Separator } from '@/components/ui/separator';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Badge } from '@/components/ui/badge';
 import { 
   ArrowLeft, 
   Download, 
@@ -16,21 +19,45 @@ import {
   Video,
   Image as ImageIcon,
   Moon,
-  Sun
+  Sun,
+  Save,
+  BookMarked
 } from 'lucide-react';
 import { VideoProject, Scene, ScenesResponse } from '@/types';
 import { toast } from '@/hooks/use-toast';
+import { SavedProjectsService } from '@/services/savedProjectsService';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 
 interface ProjectSummaryProps {
   project: VideoProject;
   onBackToSteps: () => void;
+  onViewSavedProjects?: () => void;
+  isReadOnly?: boolean;
+  savedProjectName?: string;
 }
 
-export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) => {
+export const ProjectSummary = ({ 
+  project, 
+  onBackToSteps, 
+  onViewSavedProjects,
+  isReadOnly = false,
+  savedProjectName
+}: ProjectSummaryProps) => {
   const [isScriptExpanded, setIsScriptExpanded] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
+  const [projectName, setProjectName] = useState(savedProjectName || '');
+  const [isSaving, setIsSaving] = useState(false);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -168,6 +195,36 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
     document.documentElement.classList.toggle('dark');
   };
 
+  const handleSaveProject = async () => {
+    if (!projectName.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a project name",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await SavedProjectsService.saveProject(project, projectName.trim());
+      toast({
+        title: "Success",
+        description: "Project saved successfully!",
+      });
+      setIsSaveDialogOpen(false);
+      setProjectName('');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to save project. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Parse production prompts into scenes
   const parseScenes = (prompts: string): Scene[] => {
     try {
@@ -195,23 +252,39 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
       <nav className="sticky top-0 z-50 bg-card border-b border-border shadow-sm print:hidden">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Button
-              onClick={onBackToSteps}
-              variant="outline"
-              className="bg-primary text-primary-foreground hover:bg-primary-hover"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Steps
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                onClick={onBackToSteps}
+                variant="outline"
+                className="bg-primary text-primary-foreground hover:bg-primary-hover"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                {isReadOnly ? 'Back to Library' : 'Back to Steps'}
+              </Button>
+              {isReadOnly && (
+                <Badge variant="secondary" className="gap-1">
+                  <BookMarked className="h-3 w-3" />
+                  Saved Project
+                </Badge>
+              )}
+            </div>
             
-            <Button
-              onClick={toggleDarkMode}
-              variant="ghost"
-              size="icon"
-              className="ml-auto"
-            >
-              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            </Button>
+            <div className="flex items-center gap-2">
+              {onViewSavedProjects && (
+                <Button variant="ghost" onClick={onViewSavedProjects} className="gap-2">
+                  <BookMarked className="h-4 w-4" />
+                  My Projects
+                </Button>
+              )}
+              <Button
+                onClick={toggleDarkMode}
+                variant="ghost"
+                size="icon"
+                className="ml-auto"
+              >
+                {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
         </div>
       </nav>
@@ -222,17 +295,76 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
         {/* Header Section */}
         <header className="text-center space-y-4 print:space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground print:text-black">
-            Your Complete YouTube Video Project
+            {isReadOnly ? savedProjectName || 'Saved Project' : 'Your Complete YouTube Video Project'}
           </h1>
+          <p className="text-muted-foreground">
+            {isReadOnly 
+              ? 'View your saved project details and export your work.'
+              : 'Your complete video project is ready! Review all components and export your work.'
+            }
+          </p>
           
-          <Button
-            onClick={generateZipDownload}
-            className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary-hover print:hidden"
-            size="lg"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Export Full Project
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              onClick={generateZipDownload}
+              className="w-full sm:w-auto bg-primary text-primary-foreground hover:bg-primary-hover print:hidden"
+              size="lg"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export Full Project
+            </Button>
+            <Button
+              onClick={generatePDF}
+              variant="outline"
+              className="w-full sm:w-auto print:hidden"
+              size="lg"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Download PDF
+            </Button>
+            {!isReadOnly && (
+              <Dialog open={isSaveDialogOpen} onOpenChange={setIsSaveDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="secondary"
+                    className="w-full sm:w-auto print:hidden"
+                    size="lg"
+                  >
+                    <Save className="w-4 h-4 mr-2" />
+                    Save This Project
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Save Project</DialogTitle>
+                    <DialogDescription>
+                      Give your project a name to save it to your library for future reference.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="projectName">Project Name</Label>
+                      <Input
+                        id="projectName"
+                        placeholder="My Awesome Video Project"
+                        value={projectName}
+                        onChange={(e) => setProjectName(e.target.value)}
+                        disabled={isSaving}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsSaveDialogOpen(false)} disabled={isSaving}>
+                      Cancel
+                    </Button>
+                    <Button onClick={handleSaveProject} disabled={isSaving || !projectName.trim()}>
+                      {isSaving ? 'Saving...' : 'Save Project'}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
+          </div>
         </header>
 
         <Separator className="print:border-gray-300" />

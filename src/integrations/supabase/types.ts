@@ -38,6 +38,72 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_projects: {
+        Row: {
+          angle: string | null
+          angle_settings: string | null
+          created_at: string
+          hook: string | null
+          hook_settings: string | null
+          id: string
+          image_video_prompts: string | null
+          production_settings: string | null
+          project_name: string
+          script: string | null
+          script_settings: string | null
+          thumbnail_prompt: string | null
+          thumbnail_settings: string | null
+          title: string | null
+          title_settings: string | null
+          topic: string | null
+          topic_settings: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          angle?: string | null
+          angle_settings?: string | null
+          created_at?: string
+          hook?: string | null
+          hook_settings?: string | null
+          id?: string
+          image_video_prompts?: string | null
+          production_settings?: string | null
+          project_name: string
+          script?: string | null
+          script_settings?: string | null
+          thumbnail_prompt?: string | null
+          thumbnail_settings?: string | null
+          title?: string | null
+          title_settings?: string | null
+          topic?: string | null
+          topic_settings?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          angle?: string | null
+          angle_settings?: string | null
+          created_at?: string
+          hook?: string | null
+          hook_settings?: string | null
+          id?: string
+          image_video_prompts?: string | null
+          production_settings?: string | null
+          project_name?: string
+          script?: string | null
+          script_settings?: string | null
+          thumbnail_prompt?: string | null
+          thumbnail_settings?: string | null
+          title?: string | null
+          title_settings?: string | null
+          topic?: string | null
+          topic_settings?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_settings: {
         Row: {
           created_at: string

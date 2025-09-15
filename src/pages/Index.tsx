@@ -4,6 +4,8 @@ import { useProjectStore } from '@/hooks/useProjectStore';
 import { useAuth } from '@/hooks/useAuth';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainContent } from '@/components/layout/MainContent';
+import { SavedProjectsLibrary } from '@/components/SavedProjectsLibrary';
+import { SavedProjectsService, SavedProject } from '@/services/savedProjectsService';
 
 import { SettingsModal } from '@/components/SettingsModal';
 import { TopicStep } from '@/components/steps/TopicStep';
@@ -34,6 +36,8 @@ export default function Index() {
   const navigate = useNavigate();
   const { project, updateProject, completeStep, resetProject, selectedTemplate, applyTemplate } = useProjectStore();
   const [showSummary, setShowSummary] = useState(false);
+  const [showSavedProjects, setShowSavedProjects] = useState(false);
+  const [viewingSavedProject, setViewingSavedProject] = useState<SavedProject | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [userSettings, setUserSettings] = useState<{selected_model: AIModel} | null>(null);
 
@@ -101,10 +105,40 @@ export default function Index() {
   const handleStartOver = () => {
     resetProject();
     setShowSummary(false);
+    setShowSavedProjects(false);
+    setViewingSavedProject(null);
     toast({
       title: "Project Reset",
       description: "Starting fresh with a new project.",
     });
+  };
+
+  const handleViewSavedProjects = () => {
+    setShowSavedProjects(true);
+    setShowSummary(false);
+    setViewingSavedProject(null);
+  };
+
+  const handleViewSavedProject = (savedProject: SavedProject) => {
+    setViewingSavedProject(savedProject);
+    setShowSavedProjects(false);
+    setShowSummary(true);
+  };
+
+  const handleBackFromSavedProject = () => {
+    if (viewingSavedProject) {
+      setShowSavedProjects(true);
+      setViewingSavedProject(null);
+      setShowSummary(false);
+    } else {
+      setShowSummary(false);
+    }
+  };
+
+  const handleBackToDashboard = () => {
+    setShowSavedProjects(false);
+    setShowSummary(false);
+    setViewingSavedProject(null);
   };
 
 
@@ -283,12 +317,28 @@ export default function Index() {
     return null;
   }
 
+  if (showSavedProjects && !viewingSavedProject) {
+    return (
+      <SavedProjectsLibrary 
+        onViewProject={handleViewSavedProject} 
+        onBackToDashboard={handleBackToDashboard}
+      />
+    );
+  }
+
   if (showSummary) {
+    const displayProject = viewingSavedProject 
+      ? SavedProjectsService.convertSavedProjectToVideoProject(viewingSavedProject)
+      : project;
+    
     return (
       <div className="min-h-screen bg-background">
         <ProjectSummary 
-          project={project} 
-          onBackToSteps={() => setShowSummary(false)}
+          project={displayProject} 
+          onBackToSteps={viewingSavedProject ? handleBackFromSavedProject : () => setShowSummary(false)}
+          onViewSavedProjects={!viewingSavedProject ? handleViewSavedProjects : undefined}
+          isReadOnly={!!viewingSavedProject}
+          savedProjectName={viewingSavedProject?.project_name}
         />
       </div>
     );
@@ -316,6 +366,9 @@ export default function Index() {
           </div>
           
           <div className="flex items-center gap-2">
+            <Button variant="ghost" size="sm" onClick={handleViewSavedProjects}>
+              My Projects
+            </Button>
             <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
               <Settings className="h-4 w-4 mr-2" />
               Settings
