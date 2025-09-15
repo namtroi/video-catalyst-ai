@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, RefreshCw, FileText } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateScript } from '@/services/deepseekAI';
 
 interface ScriptStepProps {
   title: string;
@@ -28,60 +29,11 @@ export const ScriptStep = ({
   const [generatedScript, setGeneratedScript] = useState(script || '');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateScript = async () => {
+  const generateScriptFromAI = async () => {
     setIsGenerating(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      const fullScript = `# ${title}
-
-## [00:00 - 00:30] INTRO / HOOK
-${hook}
-
-Welcome back to the channel! If you're new here, I'm [Your Name] and today we're diving deep into something that completely changed my perspective...
-
-## [00:30 - 02:00] PROBLEM SETUP
-Let me paint you a picture. How many times have you been told that [common belief]? Well, what if I told you that everything you think you know about this topic is completely wrong?
-
-## [02:00 - 04:00] REVELATION #1
-Here's what I discovered when I started digging deeper...
-[Visual cue: Show relevant footage/graphics]
-
-The first thing that shocked me was [key point]. This completely goes against conventional wisdom, but the evidence is overwhelming.
-
-## [04:00 - 07:00] REVELATION #2  
-But it gets even more interesting. The second thing I learned was [another key point].
-[Visual cue: Transition to new scene/graphics]
-
-This is where things really start to get mind-blowing...
-
-## [07:00 - 10:00] REVELATION #3
-And here's the biggest shocker of all [final major point].
-[Visual cue: Build up tension with music and visuals]
-
-When I realized this, everything clicked into place.
-
-## [10:00 - 12:00] PRACTICAL APPLICATION
-So what does this mean for you? Here are three actionable steps you can take right now:
-
-1. [Practical tip #1]
-2. [Practical tip #2]  
-3. [Practical tip #3]
-
-## [12:00 - 13:00] OUTRO & CTA
-If this video opened your eyes like it did for me, smash that like button and subscribe for more content that challenges conventional thinking.
-
-What's your biggest takeaway from today's video? Let me know in the comments below!
-
-And if you want to dive even deeper into this topic, check out my previous video [link to related content].
-
-Thanks for watching, and I'll see you in the next one!
-
----
-**Total Word Count: ~1,800 words**
-**Estimated Runtime: 12-13 minutes**`;
-      
-      setGeneratedScript(fullScript);
+      const script = await generateScript(title, hook, customSettings);
+      setGeneratedScript(script);
       
       toast({
         title: "Script Generated!",
@@ -107,7 +59,7 @@ Thanks for watching, and I'll see you in the next one!
 
   useEffect(() => {
     if (title && hook && !generatedScript) {
-      generateScript();
+      generateScriptFromAI();
     }
   }, [title, hook]);
 
@@ -161,7 +113,7 @@ Thanks for watching, and I'll see you in the next one!
         )}
 
         <Button
-          onClick={generateScript}
+          onClick={generateScriptFromAI}
           disabled={isGenerating || isCompleted}
           variant="outline"
           className="w-full"

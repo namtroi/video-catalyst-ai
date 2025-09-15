@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateTitles } from '@/services/deepseekAI';
 
 interface TitleStepProps {
   topic: string;
@@ -32,17 +33,10 @@ export const TitleStep = ({
   const [titles, setTitles] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateTitles = async () => {
+  const generateTitlesFromAI = async () => {
     setIsGenerating(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const generatedTitles = [
-        "This Changed Everything I Thought I Knew (You Won't Believe What Happened)",
-        "The Secret Nobody Wants You to Know About This",
-        "I Tried This for 30 Days and Here's What Actually Happened"
-      ];
-      
+      const generatedTitles = await generateTitles(topic, angle, hook, customSettings);
       setTitles(generatedTitles);
       
       toast({
@@ -69,7 +63,7 @@ export const TitleStep = ({
 
   useEffect(() => {
     if (topic && angle && hook && titles.length === 0) {
-      generateTitles();
+      generateTitlesFromAI();
     }
   }, [topic, angle, hook]);
 
@@ -146,7 +140,7 @@ export const TitleStep = ({
         )}
 
         <Button
-          onClick={generateTitles}
+          onClick={generateTitlesFromAI}
           disabled={isGenerating || isCompleted}
           variant="outline"
           className="w-full"

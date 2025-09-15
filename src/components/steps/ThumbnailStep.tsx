@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Loader2, RefreshCw, Image } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateThumbnailPrompts } from '@/services/deepseekAI';
 
 interface ThumbnailStepProps {
   title: string;
@@ -30,17 +31,10 @@ export const ThumbnailStep = ({
   const [prompts, setPrompts] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generatePrompts = async () => {
+  const generatePromptsFromAI = async () => {
     setIsGenerating(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const generatedPrompts = [
-        "A split-screen composition showing 'before and after' scenarios, with bold text overlay reading 'THE TRUTH', high contrast lighting, vibrant colors, professional photography style, 1280x720 aspect ratio",
-        "Close-up of shocked facial expression with wide eyes, dramatic lighting, bright background with question marks and exclamation points scattered around, bold yellow text overlay, clickbait style thumbnail",
-        "Hand pointing at mysterious object or screen, dramatic shadows, red arrows pointing to the focal point, bold red and white text overlay with 'EXPOSED' or 'REVEALED', high energy composition"
-      ];
-      
+      const generatedPrompts = await generateThumbnailPrompts(title, hook, customSettings);
       setPrompts(generatedPrompts);
       
       toast({
@@ -67,7 +61,7 @@ export const ThumbnailStep = ({
 
   useEffect(() => {
     if (title && hook && prompts.length === 0) {
-      generatePrompts();
+      generatePromptsFromAI();
     }
   }, [title, hook]);
 
@@ -137,7 +131,7 @@ export const ThumbnailStep = ({
         )}
 
         <Button
-          onClick={generatePrompts}
+          onClick={generatePromptsFromAI}
           disabled={isGenerating || isCompleted}
           variant="outline"
           className="w-full"

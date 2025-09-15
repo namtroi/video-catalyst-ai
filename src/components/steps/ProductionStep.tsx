@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, RefreshCw, Video, Image as ImageIcon } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateImageVideoPrompts } from '@/services/deepseekAI';
 
 interface ProductionStepProps {
   script: string;
@@ -26,52 +27,11 @@ export const ProductionStep = ({
   const [generatedPrompts, setGeneratedPrompts] = useState(imageVideoPrompts || '');
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generatePrompts = async () => {
+  const generatePromptsFromAI = async () => {
     setIsGenerating(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 3000));
-      
-      const productionPrompts = `# Image & Video Generation Prompts
-
-## Scene 1: Opening Hook (0:00-0:30)
-**Image Prompt:** Close-up of a person with a shocked expression, dramatic lighting, question marks floating around their head, modern minimalist background
-**Video Prompt:** Smooth zoom into the person's face with subtle head movement, question marks appearing and disappearing with a pulsing effect, 8-second duration
-
-## Scene 2: Problem Setup (0:30-2:00)
-**Image Prompt:** Split screen showing "common belief" vs "reality", contrasting visual elements, bold text overlays, vibrant colors
-**Video Prompt:** Dynamic split-screen reveal animation, text appearing with typewriter effect, smooth transitions between before/after states, 10-second duration
-
-## Scene 3: Revelation #1 (2:00-4:00)
-**Image Prompt:** Abstract representation of discovery, lightbulb moment, golden rays of light, modern flat design style
-**Video Prompt:** Animated lightbulb flickering on with expanding golden light rays, particles floating upward, smooth rotation, 8-second duration
-
-## Scene 4: Evidence Building (4:00-7:00)
-**Image Prompt:** Infographic-style visualization, charts and data points, clean modern design, blue and green color scheme
-**Video Prompt:** Animated chart bars growing upward, data points connecting with lines, smooth transitions between different graphs, 12-second duration
-
-## Scene 5: Mind-Blowing Revelation (7:00-10:00)
-**Image Prompt:** Explosive visual metaphor, mind-blown expression, colorful explosion of geometric shapes, high energy composition
-**Video Prompt:** Explosive animation with geometric shapes bursting outward, person's reaction with exaggerated expression, 10-second duration
-
-## Scene 6: Practical Tips (10:00-12:00)
-**Image Prompt:** Clean numbered list layout, modern icons for each tip, professional color scheme, easy to read typography
-**Video Prompt:** Sequential reveal of numbered points with smooth slide-in animations, icons bouncing into place, 8-second duration per tip
-
-## Scene 7: Call to Action (12:00-13:00)
-**Image Prompt:** Engaging subscribe button animation, like and bell icons, YouTube-style interface elements, bright engaging colors
-**Video Prompt:** Bouncing subscribe button with glowing effect, like button animation with heart particles, bell icon ringing, 6-second duration
-
-## Scene 8: Channel Branding (13:00-End)
-**Image Prompt:** Clean channel logo/branding, next video thumbnail preview, consistent color scheme matching channel identity
-**Video Prompt:** Logo appearing with subtle glow effect, thumbnail sliding in from the side, smooth fade transitions, 5-second duration
-
----
-**Total Scenes:** 8
-**Estimated Total Production Time:** 65-70 seconds of generated content
-**Style Consistency:** Modern, clean, high-energy with smooth animations
-**Color Palette:** Blue (#007BFF), Green (#28A745), Gold (#FFC107), White/Gray backgrounds`;
-      
-      setGeneratedPrompts(productionPrompts);
+      const prompts = await generateImageVideoPrompts(script, customSettings);
+      setGeneratedPrompts(prompts);
       
       toast({
         title: "Production Prompts Generated!",
@@ -97,7 +57,7 @@ export const ProductionStep = ({
 
   useEffect(() => {
     if (script && !generatedPrompts) {
-      generatePrompts();
+      generatePromptsFromAI();
     }
   }, [script]);
 
@@ -147,7 +107,7 @@ export const ProductionStep = ({
         )}
 
         <Button
-          onClick={generatePrompts}
+          onClick={generatePromptsFromAI}
           disabled={isGenerating || isCompleted}
           variant="outline"
           className="w-full"

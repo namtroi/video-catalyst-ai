@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateAngles } from '@/services/deepseekAI';
 
 interface AngleStepProps {
   topic: string;
@@ -28,17 +29,10 @@ export const AngleStep = ({
   const [angles, setAngles] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateAngles = async () => {
+  const generateAnglesFromAI = async () => {
     setIsGenerating(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const generatedAngles = [
-        "The Beginner's Perspective: Breaking down complex concepts for newcomers",
-        "The Expert's Inside Look: Advanced insights and industry secrets",
-        "The Myth-Busting Approach: Debunking common misconceptions and revealing the truth"
-      ];
-      
+      const generatedAngles = await generateAngles(topic, customSettings);
       setAngles(generatedAngles);
       
       toast({
@@ -65,7 +59,7 @@ export const AngleStep = ({
 
   useEffect(() => {
     if (topic && angles.length === 0) {
-      generateAngles();
+      generateAnglesFromAI();
     }
   }, [topic]);
 
@@ -123,7 +117,7 @@ export const AngleStep = ({
         )}
 
         <Button
-          onClick={generateAngles}
+          onClick={generateAnglesFromAI}
           disabled={isGenerating || isCompleted}
           variant="outline"
           className="w-full"

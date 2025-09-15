@@ -5,6 +5,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { Loader2, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateTopic } from '@/services/deepseekAI';
 
 interface TopicStepProps {
   topic?: string;
@@ -28,27 +29,9 @@ export const TopicStep = ({
   const generateRandomTopic = async () => {
     setIsGenerating(true);
     try {
-      // Simulate AI generation for now
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const topics = [
-        "How AI is Secretly Changing Your Daily Life (And You Don't Even Know It)",
-        "The Dark Side of Social Media Algorithms: What They Don't Want You to Know",
-        "Why Everyone is Switching to This Unknown Productivity Method",
-        "The Science Behind Why Some People Never Get Sick",
-        "Hidden Features in Popular Apps That Will Blow Your Mind",
-        "The Psychology Tricks Restaurants Use to Make You Spend More",
-        "Why Successful People Wake Up at 4 AM (It's Not What You Think)"
-      ];
-      
-      let prompt = "Generate a single engaging YouTube video topic suitable for 8-15 minutes. Make it trending or evergreen.";
-      if (customSettings) {
-        prompt += ` Additional instructions: ${customSettings}`;
-      }
-      
-      const randomTopic = topics[Math.floor(Math.random() * topics.length)];
-      setGeneratedTopic(randomTopic);
-      setInputTopic(randomTopic);
+      const generatedTopicText = await generateTopic(customSettings);
+      setGeneratedTopic(generatedTopicText);
+      setInputTopic(generatedTopicText);
       
       toast({
         title: "Topic Generated!",

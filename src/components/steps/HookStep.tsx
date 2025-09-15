@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Loader2, RefreshCw } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { generateHooks } from '@/services/deepseekAI';
 
 interface HookStepProps {
   topic: string;
@@ -30,17 +31,10 @@ export const HookStep = ({
   const [hooks, setHooks] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const generateHooks = async () => {
+  const generateHooksFromAI = async () => {
     setIsGenerating(true);
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      const generatedHooks = [
-        "Have you ever wondered why some people seem to have all the luck? Well, I discovered something that changed everything...",
-        "What I'm about to show you goes against everything you've been told, but stick with me because the results will shock you...",
-        "Three months ago, I thought I knew everything about this topic. I was wrong, and what I learned next completely blew my mind..."
-      ];
-      
+      const generatedHooks = await generateHooks(topic, angle, customSettings);
       setHooks(generatedHooks);
       
       toast({
@@ -67,7 +61,7 @@ export const HookStep = ({
 
   useEffect(() => {
     if (topic && angle && hooks.length === 0) {
-      generateHooks();
+      generateHooksFromAI();
     }
   }, [topic, angle]);
 
@@ -134,7 +128,7 @@ export const HookStep = ({
         )}
 
         <Button
-          onClick={generateHooks}
+          onClick={generateHooksFromAI}
           disabled={isGenerating || isCompleted}
           variant="outline"
           className="w-full"
