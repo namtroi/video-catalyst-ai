@@ -109,75 +109,43 @@ Do not include any additional text, explanations, or markdown outside the JSON.`
   }
 };
 
-interface HookOption {
-  hook_id: number;
-  hook_text: string;
-}
+export const generateHooks = async (topic: string, angle: string, customSettings?: string): Promise<string[]> => {
+  const prompt = `From the topic '${topic}' and angle '${angle}', generate 3 compelling video hooks (first 30-60 seconds script snippets) to hook viewers immediately. Make them intriguing and story-driven. Format as numbered list.
 
-interface HooksResponse {
-  hooks: HookOption[];
-}
-
-export const generateHooks = async (topic: string, angle: string, customSettings?: string): Promise<HookOption[]> => {
-  const prompt = `From the topic '${topic}' and angle '${angle}', generate 3 compelling video hooks (first 30-60 seconds script snippets) to hook viewers immediately. Make them intriguing and story-driven.
-
-Respond ONLY with a valid JSON object in this exact structure:
+   
+    Respond ONLY with a valid JSON object in this exact structure:
 {
   "hooks": [
     {
-      "hook_id": 1,
-      "hook_text": "Full script snippet for Hook 1 here..."
-    },
-    {
-      "hook_id": 2,
-      "hook_text": "Full script snippet for Hook 2 here..."
-    },
-    {
-      "hook_id": 3,
-      "hook_text": "Full script snippet for Hook 3 here..."
-    }
+    "hook_id": 1,
+    "hook_text": "Full script snippet for Hook 1 here..."
+  },
+  {
+    "hook_id": 2,
+    "hook_text": "Full script snippet for Hook 2 here..."
+  },
+  {
+    "hook_id": 3,
+    "hook_text": "Full script snippet for Hook 3 here..."
+  }
   ]
 }
 
-Do not include any additional text, explanations, or markdown outside the JSON.`;
-
+Do not include any additional text, explanations, or markdown outside the JSON.
+  
+  
+  `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
-  try {
-    const cleanedResponse = response.trim();
-    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-    const jsonString = jsonMatch ? jsonMatch[0] : cleanedResponse;
-    
-    const parsedData: HooksResponse = JSON.parse(jsonString);
-    
-    if (!parsedData.hooks || !Array.isArray(parsedData.hooks)) {
-      throw new Error('Invalid hooks format in response');
-    }
-    
-    return parsedData.hooks.slice(0, 3);
-  } catch (error) {
-    console.error('Failed to parse hooks JSON:', error);
-    const lines = response.split('\n').filter(line => line.trim());
-    return lines.slice(0, 3).map((line, index) => ({
-      hook_id: index + 1,
-      hook_text: line.replace(/^\d+\.\s*/, '').trim()
-    }));
-  }
+  const lines = response.split('\n').filter(line => line.trim());
+  return lines.slice(0, 3).map(line => line.replace(/^\d+\.\s*/, '').trim());
 };
 
-interface TitleOption {
-  title_id: number;
-  title_text: string;
-}
-
-interface TitlesResponse {
-  titles: TitleOption[];
-}
-
-export const generateTitles = async (topic: string, angle: string, hook: string, customSettings?: string): Promise<TitleOption[]> => {
-  const prompt = `From the hook '${hook}' (and underlying topic/angle), generate 3 SEO-optimized YouTube titles that are clickbait-y yet honest, under 60 characters each. Aim for curiosity or benefit-driven.
-
-Respond ONLY with a valid JSON object in this exact structure:
+export const generateTitles = async (topic: string, angle: string, hook: string, customSettings?: string): Promise<string[]> => {
+  const prompt = `From the hook '${hook}' (and underlying topic/angle), generate 3 SEO-optimized YouTube titles that are clickbait-y yet honest, under 60 characters each. Aim for curiosity or benefit-driven. Format as numbered list.
+  
+  
+  Respond ONLY with a valid JSON object in this exact structure:
 {
   "titles": [
     {
@@ -193,47 +161,23 @@ Respond ONLY with a valid JSON object in this exact structure:
       "title_text": "Full title text for Title 3 here..."
     }
   ]
-}
+}Do not include any additional text, explanations, or markdown outside the JSON.
 
-Do not include any additional text, explanations, or markdown outside the JSON.`;
 
+  
+  
+  `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
-  try {
-    const cleanedResponse = response.trim();
-    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-    const jsonString = jsonMatch ? jsonMatch[0] : cleanedResponse;
-    
-    const parsedData: TitlesResponse = JSON.parse(jsonString);
-    
-    if (!parsedData.titles || !Array.isArray(parsedData.titles)) {
-      throw new Error('Invalid titles format in response');
-    }
-    
-    return parsedData.titles.slice(0, 3);
-  } catch (error) {
-    console.error('Failed to parse titles JSON:', error);
-    const lines = response.split('\n').filter(line => line.trim());
-    return lines.slice(0, 3).map((line, index) => ({
-      title_id: index + 1,
-      title_text: line.replace(/^\d+\.\s*/, '').trim()
-    }));
-  }
+  const lines = response.split('\n').filter(line => line.trim());
+  return lines.slice(0, 3).map(line => line.replace(/^\d+\.\s*/, '').trim());
 };
 
-interface ThumbnailOption {
-  prompt_id: number;
-  prompt_text: string;
-}
-
-interface ThumbnailPromptsResponse {
-  thumbnail_prompts: ThumbnailOption[];
-}
-
-export const generateThumbnailPrompts = async (title: string, hook: string, customSettings?: string): Promise<ThumbnailOption[]> => {
-  const prompt = `From the title '${title}' and hook '${hook}', generate 3 detailed DALL-E/Midjourney-style prompts for YouTube thumbnails. Each should be visually striking, high-contrast, with text overlay ideas, optimized for 1280x720.
-
-Respond ONLY with a valid JSON object in this exact structure:
+export const generateThumbnailPrompts = async (title: string, hook: string, customSettings?: string): Promise<string[]> => {
+  const prompt = `From the title '${title}' and hook '${hook}', generate 3 detailed DALL-E/Midjourney-style prompts for YouTube thumbnails. Each should be visually striking, high-contrast, with text overlay ideas, optimized for 1280x720. Format as numbered list.
+  
+  
+  Respond ONLY with a valid JSON object in this exact structure:
 {
   "thumbnail_prompts": [
     {
@@ -249,32 +193,16 @@ Respond ONLY with a valid JSON object in this exact structure:
       "prompt_text": "Detailed prompt for Thumbnail 3 here..."
     }
   ]
-}
+}Do not include any additional text, explanations, or markdown outside the JSON.
 
-Do not include any additional text, explanations, or markdown outside the JSON.`;
 
+  
+  
+  `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
-  try {
-    const cleanedResponse = response.trim();
-    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
-    const jsonString = jsonMatch ? jsonMatch[0] : cleanedResponse;
-    
-    const parsedData: ThumbnailPromptsResponse = JSON.parse(jsonString);
-    
-    if (!parsedData.thumbnail_prompts || !Array.isArray(parsedData.thumbnail_prompts)) {
-      throw new Error('Invalid thumbnail prompts format in response');
-    }
-    
-    return parsedData.thumbnail_prompts.slice(0, 3);
-  } catch (error) {
-    console.error('Failed to parse thumbnail prompts JSON:', error);
-    const lines = response.split('\n').filter(line => line.trim());
-    return lines.slice(0, 3).map((line, index) => ({
-      prompt_id: index + 1,
-      prompt_text: line.replace(/^\d+\.\s*/, '').trim()
-    }));
-  }
+  const lines = response.split('\n').filter(line => line.trim());
+  return lines.slice(0, 3).map(line => line.replace(/^\d+\.\s*/, '').trim());
 };
 
 export const generateScript = async (title: string, hook: string, customSettings?: string): Promise<string> => {
@@ -283,6 +211,33 @@ export const generateScript = async (title: string, hook: string, customSettings
 };
 
 export const generateImageVideoPrompts = async (script: string, customSettings?: string): Promise<string> => {
-  const prompt = `From the full script '${script}', break it into 10-20 scene segments. For each: Generate a detailed image prompt (DALL-E style for static visuals) and a Veo 3 video prompt (for animating the image into 5-10 second clips). Ensure consistency in style/theme. Output as a numbered list with format: "Scene X: Image Prompt: [prompt] | Video Prompt: [prompt]"`;
+  const prompt = `From the full script '${script}', break it into 10-20 scene segments. For each: Generate a detailed image prompt (DALL-E style for static visuals) and a Veo 3 video prompt (for animating the image into 5-10 second clips). Ensure consistency in style/theme. Respond ONLY with a valid JSON object like this example structure:
+  
+  
+ {
+  "scenes": [
+    {
+      "scene_number": 1,
+      "image_prompt": "A vibrant cinematic image of a futuristic cityscape at dusk, with neon lights reflecting on wet streets, high-resolution, dramatic lighting, in the style of cyberpunk art by Syd Mead.",
+      "video_prompt": "Animate the static image of the futuristic cityscape: pan slowly from left to right across the neon-lit streets, with subtle rain falling and lights flickering, 8-second clip, smooth motion, add ambient cyberpunk soundtrack fade-in."
+    },
+    {
+      "scene_number": 2,
+      "image_prompt": "Close-up portrait of a diverse group of young entrepreneurs brainstorming around a holographic table, expressions of excitement, warm office lighting, photorealistic, high detail on faces and tech elements.",
+      "video_prompt": "From the brainstorming portrait, zoom in on the holographic display as ideas pop up in 3D, group members gesturing animatedly, 6-second clip, dynamic camera shake for energy, overlay text 'Unlock Your Ideas'."
+    },
+    {
+      "scene_number": 3,
+      "image_prompt": "Abstract visualization of data streams flowing like rivers in a digital landscape, blue and green gradients, minimalist vector art, 4K resolution, ethereal glow.",
+      "video_prompt": "Animate the data streams: rivers of code and graphs flowing and merging, particles sparkling along the paths, 10-second clip, fluid motion with easing, transition to a calming wave effect."
+    }
+  ]
+}
+
+ 
+  
+  
+  
+  `;
   return generateWithDeepseek(prompt, customSettings);
 };
