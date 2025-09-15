@@ -37,6 +37,26 @@ export interface GenerationOption {
   selected?: boolean;
 }
 
+export interface AngleOption {
+  id: string;
+  description: string;
+}
+
+export interface HookOption {
+  id: string;
+  text: string;
+}
+
+export interface TitleOption {
+  id: string;
+  text: string;
+}
+
+export interface ThumbnailOption {
+  id: string;
+  text: string;
+}
+
 export interface Scene {
   scene_number: number;
   image_prompt: string;
