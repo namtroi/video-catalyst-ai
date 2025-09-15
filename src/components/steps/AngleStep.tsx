@@ -1,21 +1,18 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2, RefreshCw, ChevronDown } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { generateAngles } from '@/services/deepseekAI';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface AngleStepProps {
-  topic: string;
+  topic?: string;
   angle?: string;
   onAngleChange: (angle: string) => void;
-  onComplete: () => void;
-  isCompleted: boolean;
   angleSettings?: string;
   onAngleSettingsChange: (settings: string) => void;
 }
@@ -24,42 +21,31 @@ export const AngleStep = ({
   topic, 
   angle, 
   onAngleChange, 
-  onComplete, 
-  isCompleted,
   angleSettings,
   onAngleSettingsChange 
 }: AngleStepProps) => {
   const [selectedAngle, setSelectedAngle] = useState(angle || '');
   const [angles, setAngles] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [customSettingsOpen, setCustomSettingsOpen] = useState(false);
 
   const generateAnglesFromAI = async () => {
+    if (!topic) return;
+    
     setIsGenerating(true);
     try {
-      const generatedAngles = await generateAngles(topic, angleSettings);
-      setAngles(generatedAngles);
-      
-      toast({
-        title: "Angles Generated!",
-        description: "Three unique perspectives have been created for your topic.",
-      });
+      const result = await generateAngles(topic, angleSettings);
+      setAngles(Array.isArray(result) ? result : (typeof result === 'string' ? result.split('\n').filter(line => line.trim()) : []));
+      toast.success('Angles generated successfully!');
     } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Try again or adjust settings",
-        variant: "destructive",
-      });
+      toast.error('Failed to generate angles. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSelectAngle = () => {
-    if (selectedAngle) {
-      onAngleChange(selectedAngle);
-      onComplete();
-    }
+  const handleSelectAngle = (selectedAngle: string) => {
+    setSelectedAngle(selectedAngle);
+    onAngleChange(selectedAngle);
   };
 
   useEffect(() => {
@@ -87,99 +73,75 @@ export const AngleStep = ({
       </Card>
 
       <div className="space-y-4">
-        {angles.length > 0 ? (
-          <RadioGroup
-            value={selectedAngle}
-            onValueChange={setSelectedAngle}
-            disabled={isCompleted}
-            className="space-y-3"
-          >
-            {angles.map((angleOption, index) => (
-              <Card key={index} className={`cursor-pointer transition-colors hover:shadow-card ${
-                selectedAngle === angleOption ? 'border-primary shadow-card' : ''
-              }`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <RadioGroupItem value={angleOption} id={`angle-${index}`} className="mt-1" />
-                    <Label htmlFor={`angle-${index}`} className="cursor-pointer flex-1">
-                      <div className="font-medium text-foreground mb-1">
-                        Angle {index + 1}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
+        {isGenerating ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Generating angle suggestions...</p>
+          </div>
+        ) : angles.length > 0 ? (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Choose an Angle:</h3>
+            <RadioGroup
+              value={selectedAngle}
+              onValueChange={handleSelectAngle}
+              className="space-y-3"
+            >
+              {angles.map((angleOption, index) => (
+                <Card key={index} className="shadow-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <RadioGroupItem 
+                        value={angleOption} 
+                        id={`angle-${index}`}
+                        className="mt-1"
+                      />
+                      <Label 
+                        htmlFor={`angle-${index}`} 
+                        className="flex-1 text-sm leading-relaxed cursor-pointer"
+                      >
                         {angleOption}
-                      </div>
-                    </Label>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </RadioGroup>
+                      </Label>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </RadioGroup>
+          </div>
         ) : (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span className="text-muted-foreground">Generating angles...</span>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No angles generated yet</p>
           </div>
         )}
 
         <Button
           onClick={generateAnglesFromAI}
-          disabled={isGenerating || isCompleted}
+          disabled={isGenerating || !topic}
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Regenerating...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Re-generate Angles
-            </>
-          )}
+          {isGenerating ? "Regenerating..." : "Re-generate Angles"}
         </Button>
 
-        <Collapsible open={customSettingsOpen} onOpenChange={setCustomSettingsOpen}>
+        <Collapsible>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between p-2 h-auto">
-              <span className="text-sm font-medium">Customize Generation</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${customSettingsOpen ? 'rotate-180' : ''}`} />
+            <Button variant="outline" className="w-full justify-between">
+              Customize Generation Instructions
+              <ChevronDown className="h-4 w-4" />
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2">
-            <div className="p-3 bg-muted/50 rounded-lg space-y-2">
-              <Label htmlFor="angle-settings" className="text-xs text-muted-foreground">
-                Additional Instructions
-              </Label>
+          <CollapsibleContent className="space-y-2 mt-2">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Custom Instructions (optional)
+              </label>
               <Textarea
-                id="angle-settings"
                 value={angleSettings || ''}
                 onChange={(e) => onAngleSettingsChange(e.target.value)}
-                placeholder="Add extra instructions for angle generation (e.g., 'Focus on contrarian views', 'Include emotional angles', 'Target specific demographics')"
-                className="min-h-[80px] text-sm"
-                disabled={isCompleted}
+                placeholder="e.g., Focus on controversial takes, make it educational, target beginners..."
+                className="min-h-[80px] resize-y"
               />
             </div>
           </CollapsibleContent>
         </Collapsible>
-
-        <div className="flex items-center space-x-2 pt-4">
-          <Checkbox
-            id="select-angle"
-            checked={isCompleted}
-            onCheckedChange={handleSelectAngle}
-            disabled={!selectedAngle || isCompleted}
-          />
-          <label
-            htmlFor="select-angle"
-            className={`text-sm font-medium cursor-pointer ${
-              isCompleted ? 'text-success' : 'text-foreground'
-            }`}
-          >
-            {isCompleted ? '✓ Angle Selected' : 'Select Angle'}
-          </label>
-        </div>
       </div>
     </div>
   );

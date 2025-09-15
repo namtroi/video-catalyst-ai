@@ -1,29 +1,25 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, RefreshCw, Video, Image as ImageIcon } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 import { generateImageVideoPrompts } from '@/services/deepseekAI';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface ProductionStepProps {
-  script: string;
+  script?: string;
   imageVideoPrompts?: string;
   onImageVideoPromptsChange: (prompts: string) => void;
-  onComplete: () => void;
-  isCompleted: boolean;
   productionSettings?: string;
   onProductionSettingsChange: (settings: string) => void;
-  onShowSummary?: () => void;
+  onShowSummary: () => void;
 }
 
 export const ProductionStep = ({ 
-  script,
+  script, 
   imageVideoPrompts, 
   onImageVideoPromptsChange, 
-  onComplete, 
-  isCompleted,
   productionSettings,
   onProductionSettingsChange,
   onShowSummary 
@@ -32,21 +28,16 @@ export const ProductionStep = ({
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePromptsFromAI = async () => {
+    if (!script) return;
+    
     setIsGenerating(true);
     try {
-      const prompts = await generateImageVideoPrompts(script, productionSettings);
-      setGeneratedPrompts(prompts);
-      
-      toast({
-        title: "Production Prompts Generated!",
-        description: "Complete image and video prompts for your production pipeline have been created.",
-      });
+      const result = await generateImageVideoPrompts(script, productionSettings);
+      setGeneratedPrompts(result);
+      onImageVideoPromptsChange(result);
+      toast.success('Production prompts generated successfully!');
     } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Try again or adjust settings",
-        variant: "destructive",
-      });
+      toast.error('Failed to generate production prompts. Please try again.');
     } finally {
       setIsGenerating(false);
     }
@@ -55,19 +46,17 @@ export const ProductionStep = ({
   const handleSelectPrompts = () => {
     if (generatedPrompts) {
       onImageVideoPromptsChange(generatedPrompts);
-      onComplete();
-      // Trigger summary view after a short delay
-      setTimeout(() => {
-        onShowSummary?.();
-      }, 500);
+      onShowSummary();
     }
   };
 
   useEffect(() => {
-    if (script && !generatedPrompts) {
+    if (script && !imageVideoPrompts) {
       generatePromptsFromAI();
+    } else if (imageVideoPrompts) {
+      setGeneratedPrompts(imageVideoPrompts);
     }
-  }, [script]);
+  }, [script, imageVideoPrompts]);
 
   return (
     <div className="space-y-6">
@@ -76,79 +65,75 @@ export const ProductionStep = ({
           Step 7: Production
         </h2>
         <p className="text-muted-foreground">
-          Create image and video generation prompts for final production
+          Generate prompts for images and video clips based on your script
         </p>
       </div>
 
       <Card className="shadow-card">
         <CardContent className="p-4">
-          <h4 className="font-semibold text-foreground mb-2">Script Overview:</h4>
-          <p className="text-sm text-muted-foreground">
-            {script.split('\n').slice(0, 3).join(' ').substring(0, 200)}...
-          </p>
+          <h4 className="font-semibold text-foreground mb-2">Script Preview:</h4>
+          <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto border rounded p-2 bg-muted/50">
+            {script?.substring(0, 200)}...
+          </div>
         </CardContent>
       </Card>
 
       <div className="space-y-4">
-        {generatedPrompts ? (
-          <Card className="shadow-card">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <div className="flex items-center space-x-1">
-                  <ImageIcon className="w-4 h-4 text-primary" />
-                  <Video className="w-4 h-4 text-primary" />
-                </div>
-                <span className="font-medium text-foreground">Production Prompts</span>
-              </div>
-              <Textarea
-                value={generatedPrompts}
-                readOnly
-                className="min-h-[500px] resize-y text-sm font-mono"
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span className="text-muted-foreground">Generating production prompts...</span>
-          </div>
-        )}
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Generated Image & Video Prompts
+          </label>
+          <Textarea
+            value={generatedPrompts}
+            onChange={(e) => {
+              setGeneratedPrompts(e.target.value);
+              onImageVideoPromptsChange(e.target.value);
+            }}
+            placeholder={isGenerating ? "Generating prompts..." : "Your production prompts will appear here"}
+            className="min-h-[300px] resize-y"
+            readOnly={isGenerating}
+          />
+        </div>
 
         <Button
           onClick={generatePromptsFromAI}
-          disabled={isGenerating || isCompleted}
+          disabled={isGenerating || !script}
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Regenerating Prompts...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Re-generate Prompts
-            </>
-          )}
+          {isGenerating ? "Regenerating..." : "Re-generate Prompts"}
         </Button>
 
-        <div className="flex items-center space-x-2 pt-4">
-          <Checkbox
-            id="select-prompts"
-            checked={isCompleted}
-            onCheckedChange={handleSelectPrompts}
-            disabled={!generatedPrompts || isCompleted}
-          />
-          <label
-            htmlFor="select-prompts"
-            className={`text-sm font-medium cursor-pointer ${
-              isCompleted ? 'text-success' : 'text-foreground'
-            }`}
-          >
-            {isCompleted ? '✓ Production Prompts Selected' : 'Select Production Prompts'}
-          </label>
-        </div>
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              Customize Generation Instructions
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2 mt-2">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Custom Instructions (optional)
+              </label>
+              <Textarea
+                value={productionSettings || ''}
+                onChange={(e) => onProductionSettingsChange(e.target.value)}
+                placeholder="e.g., Focus on high-quality visuals, include specific shot types, target specific mood..."
+                className="min-h-[80px] resize-y"
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+
+        {/* Show Summary Button */}
+        <Button
+          onClick={handleSelectPrompts}
+          disabled={!generatedPrompts}
+          className="w-full bg-gradient-primary hover:opacity-90"
+        >
+          Show Project Summary
+        </Button>
       </div>
     </div>
   );

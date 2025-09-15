@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useProjectStore } from '@/hooks/useProjectStore';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainContent } from '@/components/layout/MainContent';
 import { TopicStep } from '@/components/steps/TopicStep';
@@ -9,93 +10,47 @@ import { ThumbnailStep } from '@/components/steps/ThumbnailStep';
 import { ScriptStep } from '@/components/steps/ScriptStep';
 import { ProductionStep } from '@/components/steps/ProductionStep';
 import { ProjectSummary } from '@/components/ProjectSummary';
-import { useProjectStore } from '@/hooks/useProjectStore';
-import { StepData } from '@/types';
-import { toast } from '@/hooks/use-toast';
+import { toast } from '@/components/ui/use-toast';
 
-const Index = () => {
-  const { project, updateProject, completeStep, goToStep, resetProject } = useProjectStore();
+interface StepData {
+  label: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  active: boolean;
+  locked: boolean;
+}
+
+export default function Index() {
+  const { project, updateProject, completeStep, resetProject } = useProjectStore();
   const [showSummary, setShowSummary] = useState(false);
 
-  const steps: StepData[] = [
-    {
-      step: 1,
-      label: "Step 1: Topic",
-      title: "Topic",
-      description: "Enter or generate a video idea",
-      isCompleted: project.completedSteps[0],
-      isActive: project.currentStep === 1,
-      isLocked: false,
-    },
-    {
-      step: 2,
-      label: "Step 2: Angle",
-      title: "Angle",
-      description: "Choose a perspective for your topic",
-      isCompleted: project.completedSteps[1],
-      isActive: project.currentStep === 2,
-      isLocked: !project.completedSteps[0],
-    },
-    {
-      step: 3,
-      label: "Step 3: Hook",
-      title: "Hook",
-      description: "Select an attention-grabbing opener",
-      isCompleted: project.completedSteps[2],
-      isActive: project.currentStep === 3,
-      isLocked: !project.completedSteps[1],
-    },
-    {
-      step: 4,
-      label: "Step 4: Title",
-      title: "Title",
-      description: "Pick a clickable video title",
-      isCompleted: project.completedSteps[3],
-      isActive: project.currentStep === 4,
-      isLocked: !project.completedSteps[2],
-    },
-    {
-      step: 5,
-      label: "Step 5: Thumbnail",
-      title: "Thumbnail",
-      description: "Generate image prompts for visuals",
-      isCompleted: project.completedSteps[4],
-      isActive: project.currentStep === 5,
-      isLocked: !project.completedSteps[3],
-    },
-    {
-      step: 6,
-      label: "Step 6: Script",
-      title: "Script",
-      description: "Build the full video outline",
-      isCompleted: project.completedSteps[5],
-      isActive: project.currentStep === 6,
-      isLocked: !project.completedSteps[4],
-    },
-    {
-      step: 7,
-      label: "Step 7: Production",
-      title: "Production",
-      description: "Create image and video generation prompts",
-      isCompleted: project.completedSteps[6],
-      isActive: project.currentStep === 7,
-      isLocked: !project.completedSteps[5],
-    },
-  ];
+  const totalSteps = 7;
 
-  const handleStepComplete = (step: number) => {
-    completeStep(step);
+  const isStepValid = (step: number): boolean => {
+    switch (step) {
+      case 1: return !!project.topic?.trim();
+      case 2: return !!project.angle?.trim();
+      case 3: return !!project.hook?.trim();
+      case 4: return !!project.title?.trim();
+      case 5: return !!project.thumbnailPrompt?.trim();
+      case 6: return !!project.script?.trim();
+      case 7: return !!project.imageVideoPrompts?.trim();
+      default: return false;
+    }
   };
 
   const handleNext = () => {
-    if (project.currentStep < 7) {
-      goToStep(project.currentStep + 1);
+    const currentStepValid = isStepValid(project.currentStep);
+    if (currentStepValid && project.currentStep < totalSteps) {
+      // Auto-complete current step and move to next
+      completeStep(project.currentStep);
     }
   };
 
   const handlePrev = () => {
     if (project.currentStep > 1) {
-      goToStep(project.currentStep - 1);
+      updateProject({ currentStep: project.currentStep - 1 });
     }
   };
 
@@ -108,30 +63,89 @@ const Index = () => {
     });
   };
 
-  const canGoNext = project.currentStep < 7 && project.completedSteps[project.currentStep - 1];
-  const canGoPrev = project.currentStep > 1;
+  const steps = [
+    { 
+      step: 1,
+      label: "Topic",
+      title: "Choose Topic",
+      description: "Select your video idea",
+      isCompleted: project.completedSteps[0],
+      isActive: project.currentStep === 1,
+      isLocked: false
+    },
+    { 
+      step: 2,
+      label: "Angle",
+      title: "Define Angle", 
+      description: "Choose your perspective",
+      isCompleted: project.completedSteps[1],
+      isActive: project.currentStep === 2,
+      isLocked: project.currentStep < 2 && !project.completedSteps[0]
+    },
+    { 
+      step: 3,
+      label: "Hook",
+      title: "Create Hook",
+      description: "Write engaging opener", 
+      isCompleted: project.completedSteps[2],
+      isActive: project.currentStep === 3,
+      isLocked: project.currentStep < 3 && !project.completedSteps[1]
+    },
+    { 
+      step: 4,
+      label: "Title",
+      title: "Generate Title",
+      description: "Create compelling title",
+      isCompleted: project.completedSteps[3],
+      isActive: project.currentStep === 4,
+      isLocked: project.currentStep < 4 && !project.completedSteps[2]
+    },
+    { 
+      step: 5,
+      label: "Thumbnail", 
+      title: "Design Thumbnail",
+      description: "Create thumbnail prompt",
+      isCompleted: project.completedSteps[4],
+      isActive: project.currentStep === 5,
+      isLocked: project.currentStep < 5 && !project.completedSteps[3]
+    },
+    { 
+      step: 6,
+      label: "Script",
+      title: "Write Script",
+      description: "Generate video script",
+      isCompleted: project.completedSteps[5],
+      isActive: project.currentStep === 6,
+      isLocked: project.currentStep < 6 && !project.completedSteps[4]
+    },
+    { 
+      step: 7,
+      label: "Production",
+      title: "Production Ready",
+      description: "Generate final prompts",
+      isCompleted: project.completedSteps[6],
+      isActive: project.currentStep === 7,
+      isLocked: project.currentStep < 7 && !project.completedSteps[5]
+    },
+  ];
 
   const renderCurrentStep = () => {
     switch (project.currentStep) {
-      case 1:
-        return (
-          <TopicStep
-            topic={project.topic}
-            onTopicChange={(topic) => updateProject({ topic })}
-            onComplete={() => handleStepComplete(1)}
-            isCompleted={project.completedSteps[0]}
-            topicSettings={project.topicSettings}
-            onTopicSettingsChange={(topicSettings) => updateProject({ topicSettings })}
-          />
-        );
+        case 1:
+          return (
+            <TopicStep
+              topic={project.topic}
+              onTopicChange={(topic) => updateProject({ topic })}
+              topicSettings={project.topicSettings}
+              onTopicSettingsChange={(topicSettings) => updateProject({ topicSettings })}
+            />
+          );
       case 2:
         return (
           <AngleStep
-            topic={project.topic!}
+            topic={project.topic}
             angle={project.angle}
             onAngleChange={(angle) => updateProject({ angle })}
-            onComplete={() => handleStepComplete(2)}
-            isCompleted={project.completedSteps[1]}
             angleSettings={project.angleSettings}
             onAngleSettingsChange={(angleSettings) => updateProject({ angleSettings })}
           />
@@ -139,12 +153,10 @@ const Index = () => {
       case 3:
         return (
           <HookStep
-            topic={project.topic!}
-            angle={project.angle!}
+            topic={project.topic}
+            angle={project.angle}
             hook={project.hook}
             onHookChange={(hook) => updateProject({ hook })}
-            onComplete={() => handleStepComplete(3)}
-            isCompleted={project.completedSteps[2]}
             hookSettings={project.hookSettings}
             onHookSettingsChange={(hookSettings) => updateProject({ hookSettings })}
           />
@@ -152,13 +164,11 @@ const Index = () => {
       case 4:
         return (
           <TitleStep
-            topic={project.topic!}
-            angle={project.angle!}
-            hook={project.hook!}
+            topic={project.topic}
+            angle={project.angle}
+            hook={project.hook}
             title={project.title}
             onTitleChange={(title) => updateProject({ title })}
-            onComplete={() => handleStepComplete(4)}
-            isCompleted={project.completedSteps[3]}
             titleSettings={project.titleSettings}
             onTitleSettingsChange={(titleSettings) => updateProject({ titleSettings })}
           />
@@ -166,25 +176,19 @@ const Index = () => {
       case 5:
         return (
           <ThumbnailStep
-            title={project.title!}
-            hook={project.hook!}
-            thumbnailPrompt={project.thumbnailPrompt}
-            onThumbnailPromptChange={(thumbnailPrompt) => updateProject({ thumbnailPrompt })}
-            onComplete={() => handleStepComplete(5)}
-            isCompleted={project.completedSteps[4]}
-            thumbnailSettings={project.thumbnailSettings}
-            onThumbnailSettingsChange={(thumbnailSettings) => updateProject({ thumbnailSettings })}
+            title={project.title}
+            hook={project.hook}
+            prompt={project.thumbnailPrompt}
+            onPromptChange={(prompt) => updateProject({ thumbnailPrompt: prompt })}
           />
         );
       case 6:
         return (
           <ScriptStep
-            title={project.title!}
-            hook={project.hook!}
+            title={project.title}
+            hook={project.hook}
             script={project.script}
             onScriptChange={(script) => updateProject({ script })}
-            onComplete={() => handleStepComplete(6)}
-            isCompleted={project.completedSteps[5]}
             scriptSettings={project.scriptSettings}
             onScriptSettingsChange={(scriptSettings) => updateProject({ scriptSettings })}
           />
@@ -192,11 +196,9 @@ const Index = () => {
       case 7:
         return (
           <ProductionStep
-            script={project.script!}
+            script={project.script}
             imageVideoPrompts={project.imageVideoPrompts}
-            onImageVideoPromptsChange={(imageVideoPrompts) => updateProject({ imageVideoPrompts })}
-            onComplete={() => handleStepComplete(7)}
-            isCompleted={project.completedSteps[6]}
+            onImageVideoPromptsChange={(prompts) => updateProject({ imageVideoPrompts: prompts })}
             productionSettings={project.productionSettings}
             onProductionSettingsChange={(productionSettings) => updateProject({ productionSettings })}
             onShowSummary={() => setShowSummary(true)}
@@ -207,31 +209,31 @@ const Index = () => {
     }
   };
 
-  // Show project summary if triggered
   if (showSummary) {
     return (
-      <ProjectSummary
-        project={project}
-        onBackToSteps={() => setShowSummary(false)}
-      />
+      <div className="min-h-screen bg-background">
+        <ProjectSummary 
+          project={project} 
+          onBackToSteps={() => setShowSummary(false)}
+        />
+      </div>
     );
   }
 
   return (
-    <div className="h-screen bg-background flex">
-      {/* Left Sidebar */}
+    <div className="min-h-screen bg-background flex">
       <Sidebar 
-        steps={steps} 
-        onStepClick={goToStep}
+        steps={steps}
+        currentStep={project.currentStep}
+        onStepClick={() => {}} // Navigation handled by next/prev buttons
         onStartOver={handleStartOver}
       />
-
-      {/* Main Content */}
+      
       <MainContent
         currentStep={project.currentStep}
-        totalSteps={7}
-        canGoNext={canGoNext}
-        canGoPrev={canGoPrev}
+        totalSteps={totalSteps}
+        canGoNext={project.currentStep < totalSteps && isStepValid(project.currentStep)}
+        canGoPrev={project.currentStep > 1}
         onNext={handleNext}
         onPrev={handlePrev}
       >
@@ -239,6 +241,4 @@ const Index = () => {
       </MainContent>
     </div>
   );
-};
-
-export default Index;
+}

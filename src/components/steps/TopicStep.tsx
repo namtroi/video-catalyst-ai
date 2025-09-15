@@ -1,19 +1,15 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Label } from '@/components/ui/label';
-import { Loader2, Sparkles, ChevronDown } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 import { generateTopic } from '@/services/deepseekAI';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface TopicStepProps {
   topic?: string;
   onTopicChange: (topic: string) => void;
-  onComplete: () => void;
-  isCompleted: boolean;
   topicSettings?: string;
   onTopicSettingsChange: (settings: string) => void;
 }
@@ -21,43 +17,35 @@ interface TopicStepProps {
 export const TopicStep = ({ 
   topic, 
   onTopicChange, 
-  onComplete, 
-  isCompleted,
   topicSettings,
   onTopicSettingsChange 
 }: TopicStepProps) => {
   const [inputTopic, setInputTopic] = useState(topic || '');
-  const [generatedTopic, setGeneratedTopic] = useState(topic || '');
+  const [generatedTopic, setGeneratedTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
-  const [customSettingsOpen, setCustomSettingsOpen] = useState(false);
+
+  useEffect(() => {
+    if (topic) {
+      setInputTopic(topic);
+    }
+  }, [topic]);
 
   const generateRandomTopic = async () => {
     setIsGenerating(true);
     try {
-      const generatedTopicText = await generateTopic(topicSettings);
-      setGeneratedTopic(generatedTopicText);
-      setInputTopic(generatedTopicText);
-      
-      toast({
-        title: "Topic Generated!",
-        description: "Your video topic has been generated successfully.",
-      });
+      const result = await generateTopic(topicSettings);
+      setGeneratedTopic(result);
+      toast.success('Topic generated successfully!');
     } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Try again or adjust settings",
-        variant: "destructive",
-      });
+      toast.error('Failed to generate topic. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSelectTopic = () => {
-    if (inputTopic.trim()) {
-      onTopicChange(inputTopic.trim());
-      onComplete();
-    }
+  const handleTopicChange = (value: string) => {
+    setInputTopic(value);
+    onTopicChange(value);
   };
 
   return (
@@ -78,80 +66,63 @@ export const TopicStep = ({
           </label>
           <Textarea
             value={inputTopic}
-            onChange={(e) => setInputTopic(e.target.value)}
+            onChange={(e) => handleTopicChange(e.target.value)}
             placeholder="Enter your video topic idea, or leave blank to generate randomly"
             className="min-h-[100px] resize-y"
-            disabled={isCompleted}
           />
         </div>
 
         <Button
           onClick={generateRandomTopic}
-          disabled={isGenerating || isCompleted}
-          className="w-full bg-gradient-primary hover:opacity-90"
+          disabled={isGenerating}
+          variant="outline"
+          className="w-full"
         >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Generating Topic...
-            </>
-          ) : (
-            <>
-              <Sparkles className="w-4 h-4 mr-2" />
-              Generate Random Topic
-            </>
-          )}
+          {isGenerating ? "Generating..." : "Generate Random Topic"}
         </Button>
 
         {generatedTopic && (
           <Card className="shadow-card">
-            <CardContent className="p-4">
-              <h4 className="font-semibold text-foreground mb-2">Generated Topic:</h4>
-              <p className="text-sm text-muted-foreground">{generatedTopic}</p>
+            <CardHeader>
+              <CardTitle className="text-lg">Generated Topic Suggestion</CardTitle>
+              <CardDescription>
+                AI-generated video topic idea
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-foreground mb-4">{generatedTopic}</p>
+              <Button
+                onClick={() => handleTopicChange(generatedTopic)}
+                variant="outline"
+                size="sm"
+              >
+                Use This Topic
+              </Button>
             </CardContent>
           </Card>
         )}
 
-        <Collapsible open={customSettingsOpen} onOpenChange={setCustomSettingsOpen}>
+        <Collapsible>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between p-2 h-auto">
-              <span className="text-sm font-medium">Customize Generation</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${customSettingsOpen ? 'rotate-180' : ''}`} />
+            <Button variant="outline" className="w-full justify-between">
+              Customize Generation Instructions
+              <ChevronDown className="h-4 w-4" />
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2">
-            <div className="p-3 bg-muted/50 rounded-lg space-y-2">
-              <Label htmlFor="topic-settings" className="text-xs text-muted-foreground">
-                Additional Instructions
-              </Label>
+          <CollapsibleContent className="space-y-2 mt-2">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Custom Instructions (optional)
+              </label>
               <Textarea
-                id="topic-settings"
                 value={topicSettings || ''}
                 onChange={(e) => onTopicSettingsChange(e.target.value)}
-                placeholder="Add extra instructions for topic generation (e.g., 'Focus on educational content', 'Target young adults', 'Include trending topics')"
-                className="min-h-[80px] text-sm"
-                disabled={isCompleted}
+                placeholder="e.g., Focus on trending topics in technology, make it beginner-friendly..."
+                className="min-h-[80px] resize-y"
               />
             </div>
           </CollapsibleContent>
         </Collapsible>
-
-        <div className="flex items-center space-x-2 pt-4">
-          <Checkbox
-            id="select-topic"
-            checked={isCompleted}
-            onCheckedChange={handleSelectTopic}
-            disabled={!inputTopic.trim() || isCompleted}
-          />
-          <label
-            htmlFor="select-topic"
-            className={`text-sm font-medium cursor-pointer ${
-              isCompleted ? 'text-success' : 'text-foreground'
-            }`}
-          >
-            {isCompleted ? '✓ Topic Selected' : 'Select Topic'}
-          </label>
-        </div>
       </div>
     </div>
   );

@@ -1,67 +1,53 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2, RefreshCw, ChevronDown } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { generateHooks } from '@/services/deepseekAI';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface HookStepProps {
-  topic: string;
-  angle: string;
+  topic?: string;
+  angle?: string;
   hook?: string;
   onHookChange: (hook: string) => void;
-  onComplete: () => void;
-  isCompleted: boolean;
   hookSettings?: string;
   onHookSettingsChange: (settings: string) => void;
 }
 
 export const HookStep = ({ 
   topic, 
-  angle,
+  angle, 
   hook, 
   onHookChange, 
-  onComplete, 
-  isCompleted,
   hookSettings,
   onHookSettingsChange 
 }: HookStepProps) => {
   const [selectedHook, setSelectedHook] = useState(hook || '');
   const [hooks, setHooks] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [customSettingsOpen, setCustomSettingsOpen] = useState(false);
 
   const generateHooksFromAI = async () => {
+    if (!topic || !angle) return;
+    
     setIsGenerating(true);
     try {
-      const generatedHooks = await generateHooks(topic, angle, hookSettings);
-      setHooks(generatedHooks);
-      
-      toast({
-        title: "Hooks Generated!",
-        description: "Three compelling video openers have been created.",
-      });
+      const result = await generateHooks(topic, angle, hookSettings);
+      setHooks(Array.isArray(result) ? result : (typeof result === 'string' ? result.split('\n').filter(line => line.trim()) : []));
+      toast.success('Hooks generated successfully!');
     } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Try again or adjust settings",
-        variant: "destructive",
-      });
+      toast.error('Failed to generate hooks. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSelectHook = () => {
-    if (selectedHook) {
-      onHookChange(selectedHook);
-      onComplete();
-    }
+  const handleSelectHook = (selectedHook: string) => {
+    setSelectedHook(selectedHook);
+    onHookChange(selectedHook);
   };
 
   useEffect(() => {
@@ -77,7 +63,7 @@ export const HookStep = ({
           Step 3: Hook
         </h2>
         <p className="text-muted-foreground">
-          Select an attention-grabbing opener to hook viewers in the first 30-60 seconds
+          Create an engaging opener that will hook your viewers from the start
         </p>
       </div>
 
@@ -98,99 +84,75 @@ export const HookStep = ({
       </div>
 
       <div className="space-y-4">
-        {hooks.length > 0 ? (
-          <RadioGroup
-            value={selectedHook}
-            onValueChange={setSelectedHook}
-            disabled={isCompleted}
-            className="space-y-3"
-          >
-            {hooks.map((hookOption, index) => (
-              <Card key={index} className={`cursor-pointer transition-colors hover:shadow-card ${
-                selectedHook === hookOption ? 'border-primary shadow-card' : ''
-              }`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <RadioGroupItem value={hookOption} id={`hook-${index}`} className="mt-1" />
-                    <Label htmlFor={`hook-${index}`} className="cursor-pointer flex-1">
-                      <div className="font-medium text-foreground mb-2">
-                        Hook {index + 1}
-                      </div>
-                      <div className="text-sm text-muted-foreground italic">
-                        "{hookOption}"
-                      </div>
-                    </Label>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </RadioGroup>
+        {isGenerating ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Generating hook suggestions...</p>
+          </div>
+        ) : hooks.length > 0 ? (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Choose a Hook:</h3>
+            <RadioGroup
+              value={selectedHook}
+              onValueChange={handleSelectHook}
+              className="space-y-3"
+            >
+              {hooks.map((hookOption, index) => (
+                <Card key={index} className="shadow-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <RadioGroupItem 
+                        value={hookOption} 
+                        id={`hook-${index}`}
+                        className="mt-1"
+                      />
+                      <Label 
+                        htmlFor={`hook-${index}`} 
+                        className="flex-1 text-sm leading-relaxed cursor-pointer"
+                      >
+                        {hookOption}
+                      </Label>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </RadioGroup>
+          </div>
         ) : (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span className="text-muted-foreground">Generating hooks...</span>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No hooks generated yet</p>
           </div>
         )}
 
         <Button
           onClick={generateHooksFromAI}
-          disabled={isGenerating || isCompleted}
+          disabled={isGenerating || !topic || !angle}
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Regenerating...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Re-generate Hooks
-            </>
-          )}
+          {isGenerating ? "Regenerating..." : "Re-generate Hooks"}
         </Button>
 
-        <Collapsible open={customSettingsOpen} onOpenChange={setCustomSettingsOpen}>
+        <Collapsible>
           <CollapsibleTrigger asChild>
-            <Button variant="ghost" className="w-full justify-between p-2 h-auto">
-              <span className="text-sm font-medium">Customize Generation</span>
-              <ChevronDown className={`w-4 h-4 transition-transform ${customSettingsOpen ? 'rotate-180' : ''}`} />
+            <Button variant="outline" className="w-full justify-between">
+              Customize Generation Instructions
+              <ChevronDown className="h-4 w-4" />
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2">
-            <div className="p-3 bg-muted/50 rounded-lg space-y-2">
-              <Label htmlFor="hook-settings" className="text-xs text-muted-foreground">
-                Additional Instructions
-              </Label>
+          <CollapsibleContent className="space-y-2 mt-2">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Custom Instructions (optional)
+              </label>
               <Textarea
-                id="hook-settings"
                 value={hookSettings || ''}
                 onChange={(e) => onHookSettingsChange(e.target.value)}
-                placeholder="Add extra instructions for hook generation (e.g., 'Focus on emotional hooks', 'Include questions', 'Make it controversial')"
-                className="min-h-[80px] text-sm"
-                disabled={isCompleted}
+                placeholder="e.g., Make it emotional, use curiosity gap, target specific audience..."
+                className="min-h-[80px] resize-y"
               />
             </div>
           </CollapsibleContent>
         </Collapsible>
-
-        <div className="flex items-center space-x-2 pt-4">
-          <Checkbox
-            id="select-hook"
-            checked={isCompleted}
-            onCheckedChange={handleSelectHook}
-            disabled={!selectedHook || isCompleted}
-          />
-          <label
-            htmlFor="select-hook"
-            className={`text-sm font-medium cursor-pointer ${
-              isCompleted ? 'text-success' : 'text-foreground'
-            }`}
-          >
-            {isCompleted ? '✓ Hook Selected' : 'Select Hook'}
-          </label>
-        </div>
       </div>
     </div>
   );

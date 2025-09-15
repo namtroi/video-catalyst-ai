@@ -1,64 +1,46 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, RefreshCw, Image } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { generateThumbnailPrompts } from '@/services/deepseekAI';
 
 interface ThumbnailStepProps {
-  title: string;
-  hook: string;
-  thumbnailPrompt?: string;
-  onThumbnailPromptChange: (prompt: string) => void;
-  onComplete: () => void;
-  isCompleted: boolean;
-  thumbnailSettings?: string;
-  onThumbnailSettingsChange: (settings: string) => void;
+  title?: string;
+  hook?: string;
+  prompt?: string;
+  onPromptChange: (prompt: string) => void;
 }
 
 export const ThumbnailStep = ({ 
-  title,
-  hook,
-  thumbnailPrompt, 
-  onThumbnailPromptChange, 
-  onComplete, 
-  isCompleted,
-  thumbnailSettings,
-  onThumbnailSettingsChange 
+  title, 
+  hook, 
+  prompt, 
+  onPromptChange 
 }: ThumbnailStepProps) => {
-  const [selectedPrompt, setSelectedPrompt] = useState(thumbnailPrompt || '');
+  const [selectedPrompt, setSelectedPrompt] = useState(prompt || '');
   const [prompts, setPrompts] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generatePromptsFromAI = async () => {
+    if (!title || !hook) return;
+    
     setIsGenerating(true);
     try {
-      const generatedPrompts = await generateThumbnailPrompts(title, hook, thumbnailSettings);
-      setPrompts(generatedPrompts);
-      
-      toast({
-        title: "Thumbnail Prompts Generated!",
-        description: "Three detailed image prompts for striking thumbnails have been created.",
-      });
+      const result = await generateThumbnailPrompts(title, hook);
+      setPrompts(Array.isArray(result) ? result : (typeof result === 'string' ? result.split('\n').filter(line => line.trim()) : []));
+      toast.success('Thumbnail prompts generated successfully!');
     } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Try again or adjust settings",
-        variant: "destructive",
-      });
+      toast.error('Failed to generate thumbnail prompts. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSelectPrompt = () => {
-    if (selectedPrompt) {
-      onThumbnailPromptChange(selectedPrompt);
-      onComplete();
-    }
+  const handleSelectPrompt = (selectedPrompt: string) => {
+    setSelectedPrompt(selectedPrompt);
+    onPromptChange(selectedPrompt);
   };
 
   useEffect(() => {
@@ -89,84 +71,59 @@ export const ThumbnailStep = ({
         <Card className="shadow-card">
           <CardContent className="p-4">
             <h4 className="font-semibold text-foreground mb-2">Selected Hook:</h4>
-            <p className="text-sm text-muted-foreground italic">"{hook}"</p>
+            <p className="text-sm text-muted-foreground">{hook}</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="space-y-4">
-        {prompts.length > 0 ? (
-          <RadioGroup
-            value={selectedPrompt}
-            onValueChange={setSelectedPrompt}
-            disabled={isCompleted}
-            className="space-y-3"
-          >
-            {prompts.map((promptOption, index) => (
-              <Card key={index} className={`cursor-pointer transition-colors hover:shadow-card ${
-                selectedPrompt === promptOption ? 'border-primary shadow-card' : ''
-              }`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <RadioGroupItem value={promptOption} id={`prompt-${index}`} className="mt-1" />
-                    <Label htmlFor={`prompt-${index}`} className="cursor-pointer flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Image className="w-4 h-4 text-primary" />
-                        <span className="font-medium text-foreground">
-                          Thumbnail Prompt {index + 1}
-                        </span>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
+        {isGenerating ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Generating thumbnail prompts...</p>
+          </div>
+        ) : prompts.length > 0 ? (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Choose a Thumbnail Prompt:</h3>
+            <RadioGroup
+              value={selectedPrompt}
+              onValueChange={handleSelectPrompt}
+              className="space-y-3"
+            >
+              {prompts.map((promptOption, index) => (
+                <Card key={index} className="shadow-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <RadioGroupItem 
+                        value={promptOption} 
+                        id={`prompt-${index}`}
+                        className="mt-1"
+                      />
+                      <Label 
+                        htmlFor={`prompt-${index}`} 
+                        className="flex-1 text-sm leading-relaxed cursor-pointer"
+                      >
                         {promptOption}
-                      </div>
-                    </Label>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </RadioGroup>
+                      </Label>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </RadioGroup>
+          </div>
         ) : (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span className="text-muted-foreground">Generating thumbnail prompts...</span>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No thumbnail prompts generated yet</p>
           </div>
         )}
 
         <Button
           onClick={generatePromptsFromAI}
-          disabled={isGenerating || isCompleted}
+          disabled={isGenerating || !title || !hook}
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Regenerating...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Re-generate Prompts
-            </>
-          )}
+          {isGenerating ? "Regenerating..." : "Re-generate Prompts"}
         </Button>
-
-        <div className="flex items-center space-x-2 pt-4">
-          <Checkbox
-            id="select-prompt"
-            checked={isCompleted}
-            onCheckedChange={handleSelectPrompt}
-            disabled={!selectedPrompt || isCompleted}
-          />
-          <label
-            htmlFor="select-prompt"
-            className={`text-sm font-medium cursor-pointer ${
-              isCompleted ? 'text-success' : 'text-foreground'
-            }`}
-          >
-            {isCompleted ? '✓ Thumbnail Prompt Selected' : 'Select Thumbnail Prompt'}
-          </label>
-        </div>
       </div>
     </div>
   );

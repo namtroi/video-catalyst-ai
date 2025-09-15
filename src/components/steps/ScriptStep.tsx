@@ -1,30 +1,26 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import { Loader2, RefreshCw, FileText } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'sonner';
 import { generateScript } from '@/services/deepseekAI';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown } from 'lucide-react';
 
 interface ScriptStepProps {
-  title: string;
-  hook: string;
+  title?: string;
+  hook?: string;
   script?: string;
   onScriptChange: (script: string) => void;
-  onComplete: () => void;
-  isCompleted: boolean;
   scriptSettings?: string;
   onScriptSettingsChange: (settings: string) => void;
 }
 
 export const ScriptStep = ({ 
-  title,
-  hook,
+  title, 
+  hook, 
   script, 
   onScriptChange, 
-  onComplete, 
-  isCompleted,
   scriptSettings,
   onScriptSettingsChange 
 }: ScriptStepProps) => {
@@ -32,38 +28,28 @@ export const ScriptStep = ({
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateScriptFromAI = async () => {
+    if (!title || !hook) return;
+    
     setIsGenerating(true);
     try {
-      const script = await generateScript(title, hook, scriptSettings);
-      setGeneratedScript(script);
-      
-      toast({
-        title: "Script Generated!",
-        description: "Your complete video script has been created with timestamps and structure.",
-      });
+      const result = await generateScript(title, hook, scriptSettings);
+      setGeneratedScript(result);
+      onScriptChange(result);
+      toast.success('Script generated successfully!');
     } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Try again or adjust settings",
-        variant: "destructive",
-      });
+      toast.error('Failed to generate script. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSelectScript = () => {
-    if (generatedScript) {
-      onScriptChange(generatedScript);
-      onComplete();
-    }
-  };
-
   useEffect(() => {
-    if (title && hook && !generatedScript) {
+    if (title && hook && !script) {
       generateScriptFromAI();
+    } else if (script) {
+      setGeneratedScript(script);
     }
-  }, [title, hook]);
+  }, [title, hook, script]);
 
   return (
     <div className="space-y-6">
@@ -72,7 +58,7 @@ export const ScriptStep = ({
           Step 6: Script
         </h2>
         <p className="text-muted-foreground">
-          Build the full video outline with timestamps and speaking notes
+          Generate a complete video script based on your title and hook
         </p>
       </div>
 
@@ -87,68 +73,58 @@ export const ScriptStep = ({
         <Card className="shadow-card">
           <CardContent className="p-4">
             <h4 className="font-semibold text-foreground mb-2">Selected Hook:</h4>
-            <p className="text-sm text-muted-foreground italic">"{hook}"</p>
+            <p className="text-sm text-muted-foreground">{hook}</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="space-y-4">
-        {generatedScript ? (
-          <Card className="shadow-card">
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-2 mb-3">
-                <FileText className="w-4 h-4 text-primary" />
-                <span className="font-medium text-foreground">Generated Script</span>
-              </div>
-              <Textarea
-                value={generatedScript}
-                readOnly
-                className="min-h-[400px] resize-y text-sm font-mono"
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span className="text-muted-foreground">Generating complete script...</span>
-          </div>
-        )}
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Generated Script
+          </label>
+          <Textarea
+            value={generatedScript}
+            onChange={(e) => {
+              setGeneratedScript(e.target.value);
+              onScriptChange(e.target.value);
+            }}
+            placeholder={isGenerating ? "Generating script..." : "Your script will appear here"}
+            className="min-h-[300px] resize-y"
+            readOnly={isGenerating}
+          />
+        </div>
 
         <Button
           onClick={generateScriptFromAI}
-          disabled={isGenerating || isCompleted}
+          disabled={isGenerating || !title || !hook}
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Regenerating Script...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Re-generate Script
-            </>
-          )}
+          {isGenerating ? "Regenerating..." : "Re-generate Script"}
         </Button>
 
-        <div className="flex items-center space-x-2 pt-4">
-          <Checkbox
-            id="select-script"
-            checked={isCompleted}
-            onCheckedChange={handleSelectScript}
-            disabled={!generatedScript || isCompleted}
-          />
-          <label
-            htmlFor="select-script"
-            className={`text-sm font-medium cursor-pointer ${
-              isCompleted ? 'text-success' : 'text-foreground'
-            }`}
-          >
-            {isCompleted ? '✓ Script Selected' : 'Select Script'}
-          </label>
-        </div>
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              Customize Generation Instructions
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2 mt-2">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Custom Instructions (optional)
+              </label>
+              <Textarea
+                value={scriptSettings || ''}
+                onChange={(e) => onScriptSettingsChange(e.target.value)}
+                placeholder="e.g., Keep it under 5 minutes, include call-to-action, add humor..."
+                className="min-h-[80px] resize-y"
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );

@@ -1,33 +1,30 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, RefreshCw } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 import { generateTitles } from '@/services/deepseekAI';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Textarea } from '@/components/ui/textarea';
+import { ChevronDown } from 'lucide-react';
 
 interface TitleStepProps {
-  topic: string;
-  angle: string;
-  hook: string;
+  topic?: string;
+  angle?: string;
+  hook?: string;
   title?: string;
   onTitleChange: (title: string) => void;
-  onComplete: () => void;
-  isCompleted: boolean;
   titleSettings?: string;
   onTitleSettingsChange: (settings: string) => void;
 }
 
 export const TitleStep = ({ 
   topic, 
-  angle,
-  hook,
+  angle, 
+  hook, 
   title, 
   onTitleChange, 
-  onComplete, 
-  isCompleted,
   titleSettings,
   onTitleSettingsChange 
 }: TitleStepProps) => {
@@ -36,31 +33,23 @@ export const TitleStep = ({
   const [isGenerating, setIsGenerating] = useState(false);
 
   const generateTitlesFromAI = async () => {
+    if (!topic || !angle || !hook) return;
+    
     setIsGenerating(true);
     try {
-      const generatedTitles = await generateTitles(topic, angle, hook, titleSettings);
-      setTitles(generatedTitles);
-      
-      toast({
-        title: "Titles Generated!",
-        description: "Three SEO-optimized video titles have been created.",
-      });
+      const result = await generateTitles(topic, angle, hook, titleSettings);
+      setTitles(Array.isArray(result) ? result : (typeof result === 'string' ? result.split('\n').filter(line => line.trim()) : []));
+      toast.success('Titles generated successfully!');
     } catch (error) {
-      toast({
-        title: "Generation Failed",
-        description: "Try again or adjust settings",
-        variant: "destructive",
-      });
+      toast.error('Failed to generate titles. Please try again.');
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const handleSelectTitle = () => {
-    if (selectedTitle) {
-      onTitleChange(selectedTitle);
-      onComplete();
-    }
+  const handleSelectTitle = (selectedTitle: string) => {
+    setSelectedTitle(selectedTitle);
+    onTitleChange(selectedTitle);
   };
 
   useEffect(() => {
@@ -76,7 +65,7 @@ export const TitleStep = ({
           Step 4: Title
         </h2>
         <p className="text-muted-foreground">
-          Pick a clickable video title that's SEO-optimized and engaging
+          Generate compelling titles that will attract viewers
         </p>
       </div>
 
@@ -98,84 +87,81 @@ export const TitleStep = ({
         <Card className="shadow-card">
           <CardContent className="p-4">
             <h4 className="font-semibold text-foreground mb-2">Selected Hook:</h4>
-            <p className="text-sm text-muted-foreground italic">"{hook}"</p>
+            <p className="text-sm text-muted-foreground">{hook}</p>
           </CardContent>
         </Card>
       </div>
 
       <div className="space-y-4">
-        {titles.length > 0 ? (
-          <RadioGroup
-            value={selectedTitle}
-            onValueChange={setSelectedTitle}
-            disabled={isCompleted}
-            className="space-y-3"
-          >
-            {titles.map((titleOption, index) => (
-              <Card key={index} className={`cursor-pointer transition-colors hover:shadow-card ${
-                selectedTitle === titleOption ? 'border-primary shadow-card' : ''
-              }`}>
-                <CardContent className="p-4">
-                  <div className="flex items-start space-x-3">
-                    <RadioGroupItem value={titleOption} id={`title-${index}`} className="mt-1" />
-                    <Label htmlFor={`title-${index}`} className="cursor-pointer flex-1">
-                      <div className="font-medium text-foreground mb-1">
-                        Title {index + 1}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
+        {isGenerating ? (
+          <div className="text-center py-8">
+            <p className="text-muted-foreground">Generating title suggestions...</p>
+          </div>
+        ) : titles.length > 0 ? (
+          <div className="space-y-3">
+            <h3 className="text-lg font-semibold text-foreground">Choose a Title:</h3>
+            <RadioGroup
+              value={selectedTitle}
+              onValueChange={handleSelectTitle}
+              className="space-y-3"
+            >
+              {titles.map((titleOption, index) => (
+                <Card key={index} className="shadow-card hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start space-x-3">
+                      <RadioGroupItem 
+                        value={titleOption} 
+                        id={`title-${index}`}
+                        className="mt-1"
+                      />
+                      <Label 
+                        htmlFor={`title-${index}`} 
+                        className="flex-1 text-sm leading-relaxed cursor-pointer font-medium"
+                      >
                         {titleOption}
-                      </div>
-                      <div className="text-xs text-muted-foreground mt-1">
-                        {titleOption.length} characters
-                      </div>
-                    </Label>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </RadioGroup>
+                      </Label>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </RadioGroup>
+          </div>
         ) : (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="w-6 h-6 animate-spin mr-2" />
-            <span className="text-muted-foreground">Generating titles...</span>
+          <div className="text-center py-8">
+            <p className="text-muted-foreground mb-4">No titles generated yet</p>
           </div>
         )}
 
         <Button
           onClick={generateTitlesFromAI}
-          disabled={isGenerating || isCompleted}
+          disabled={isGenerating || !topic || !angle || !hook}
           variant="outline"
           className="w-full"
         >
-          {isGenerating ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Regenerating...
-            </>
-          ) : (
-            <>
-              <RefreshCw className="w-4 h-4 mr-2" />
-              Re-generate Titles
-            </>
-          )}
+          {isGenerating ? "Regenerating..." : "Re-generate Titles"}
         </Button>
 
-        <div className="flex items-center space-x-2 pt-4">
-          <Checkbox
-            id="select-title"
-            checked={isCompleted}
-            onCheckedChange={handleSelectTitle}
-            disabled={!selectedTitle || isCompleted}
-          />
-          <label
-            htmlFor="select-title"
-            className={`text-sm font-medium cursor-pointer ${
-              isCompleted ? 'text-success' : 'text-foreground'
-            }`}
-          >
-            {isCompleted ? '✓ Title Selected' : 'Select Title'}
-          </label>
-        </div>
+        <Collapsible>
+          <CollapsibleTrigger asChild>
+            <Button variant="outline" className="w-full justify-between">
+              Customize Generation Instructions
+              <ChevronDown className="h-4 w-4" />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2 mt-2">
+            <div>
+              <label className="text-sm font-medium text-foreground mb-2 block">
+                Custom Instructions (optional)
+              </label>
+              <Textarea
+                value={titleSettings || ''}
+                onChange={(e) => onTitleSettingsChange(e.target.value)}
+                placeholder="e.g., Keep it under 60 characters, include numbers, use power words..."
+                className="min-h-[80px] resize-y"
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </div>
     </div>
   );
