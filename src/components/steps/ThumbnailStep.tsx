@@ -29,7 +29,9 @@ export const ThumbnailStep = ({
     setIsGenerating(true);
     try {
       const result = await generateThumbnailPrompts(title, hook);
-      setPrompts(Array.isArray(result) ? result : (typeof result === 'string' ? result.split('\n').filter(line => line.trim()) : []));
+      const resultStr = String(result);
+      const promptsArray = resultStr.split('\n').filter(line => line.trim());
+      setPrompts(promptsArray);
       toast.success('Thumbnail prompts generated successfully!');
     } catch (error) {
       toast.error('Failed to generate thumbnail prompts. Please try again.');

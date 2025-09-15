@@ -34,7 +34,9 @@ export const AngleStep = ({
     setIsGenerating(true);
     try {
       const result = await generateAngles(topic, angleSettings);
-      setAngles(Array.isArray(result) ? result : (typeof result === 'string' ? result.split('\n').filter(line => line.trim()) : []));
+      const resultStr = String(result);
+      const anglesArray = resultStr.split('\n').filter(line => line.trim());
+      setAngles(anglesArray);
       toast.success('Angles generated successfully!');
     } catch (error) {
       toast.error('Failed to generate angles. Please try again.');

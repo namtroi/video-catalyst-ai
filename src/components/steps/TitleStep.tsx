@@ -38,7 +38,9 @@ export const TitleStep = ({
     setIsGenerating(true);
     try {
       const result = await generateTitles(topic, angle, hook, titleSettings);
-      setTitles(Array.isArray(result) ? result : (typeof result === 'string' ? result.split('\n').filter(line => line.trim()) : []));
+      const resultStr = String(result);
+      const titlesArray = resultStr.split('\n').filter(line => line.trim());
+      setTitles(titlesArray);
       toast.success('Titles generated successfully!');
     } catch (error) {
       toast.error('Failed to generate titles. Please try again.');

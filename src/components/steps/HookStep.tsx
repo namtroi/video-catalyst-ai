@@ -36,7 +36,9 @@ export const HookStep = ({
     setIsGenerating(true);
     try {
       const result = await generateHooks(topic, angle, hookSettings);
-      setHooks(Array.isArray(result) ? result : (typeof result === 'string' ? result.split('\n').filter(line => line.trim()) : []));
+      const resultStr = String(result);
+      const hooksArray = resultStr.split('\n').filter(line => line.trim());
+      setHooks(hooksArray);
       toast.success('Hooks generated successfully!');
     } catch (error) {
       toast.error('Failed to generate hooks. Please try again.');

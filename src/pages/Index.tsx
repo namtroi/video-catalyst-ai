@@ -224,7 +224,6 @@ export default function Index() {
     <div className="min-h-screen bg-background flex">
       <Sidebar 
         steps={steps}
-        currentStep={project.currentStep}
         onStepClick={() => {}} // Navigation handled by next/prev buttons
         onStartOver={handleStartOver}
       />
