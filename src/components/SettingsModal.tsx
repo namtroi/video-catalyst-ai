@@ -133,7 +133,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
     try {
       if (model === 'segmind') {
         // Test Segmind API with a simple request
-        const response = await fetch('https://api.segmind.com/v1/seedream-4k', {
+        const response = await fetch('https://api.segmind.com/v1/seedream-4', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -49,7 +49,7 @@ serve(async (req) => {
       console.log(`Generating image ${index + 1}/${prompts.length}: ${prompt.substring(0, 50)}...`);
       
       try {
-        const response = await fetch('https://api.segmind.com/v1/seedream-4k', {
+        const response = await fetch('https://api.segmind.com/v1/seedream-4', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
