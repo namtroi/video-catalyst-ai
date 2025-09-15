@@ -19,7 +19,6 @@ export const TopicStep = ({
   onTopicSettingsChange 
 }: TopicStepProps) => {
   const [inputTopic, setInputTopic] = useState(topic || '');
-  const [generatedTopic, setGeneratedTopic] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
@@ -32,7 +31,7 @@ export const TopicStep = ({
     setIsGenerating(true);
     try {
       const result = await generateTopic(topicSettings);
-      setGeneratedTopic(result);
+      handleTopicChange(result);
       toast.success('Topic generated successfully!');
     } catch (error) {
       toast.error('Failed to generate topic. Please try again.');
@@ -79,26 +78,6 @@ export const TopicStep = ({
           {isGenerating ? "Generating..." : "Generate Random Topic"}
         </Button>
 
-        {generatedTopic && (
-          <Card className="shadow-card">
-            <CardHeader>
-              <CardTitle className="text-lg">Generated Topic Suggestion</CardTitle>
-              <CardDescription>
-                AI-generated video topic idea
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p className="text-foreground mb-4">{generatedTopic}</p>
-              <Button
-                onClick={() => handleTopicChange(generatedTopic)}
-                variant="outline"
-                size="sm"
-              >
-                Use This Topic
-              </Button>
-            </CardContent>
-          </Card>
-        )}
 
         <div>
           <label className="text-sm font-medium text-foreground mb-2 block">
