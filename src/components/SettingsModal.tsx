@@ -129,17 +129,26 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
         ? 'https://api.deepseek.com/chat/completions'
         : 'https://api.openai.com/v1/chat/completions';
 
+      const requestBody: any = {
+        messages: [{ role: 'user', content: 'Test' }],
+      };
+
+      if (model === 'deepseek') {
+        requestBody.model = 'deepseek-chat';
+        requestBody.max_tokens = 5;
+      } else {
+        // Test with GPT-4o-mini for compatibility
+        requestBody.model = 'gpt-4o-mini';
+        requestBody.max_tokens = 5;
+      }
+
       const response = await fetch(url, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${apiKey}`,
         },
-        body: JSON.stringify({
-          model: model === 'deepseek' ? 'deepseek-chat' : 'gpt-4o-mini',
-          messages: [{ role: 'user', content: 'Test' }],
-          max_tokens: 5,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       return response.ok || response.status === 429; // 429 = rate limit, but key is valid
