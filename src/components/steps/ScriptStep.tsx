@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { generateScript } from '@/services/deepseekAI';
+import { aiService, AIModel } from '@/services/aiService';
 import { Sparkles } from 'lucide-react';
 
 interface ScriptStepProps {
@@ -13,6 +13,7 @@ interface ScriptStepProps {
   onScriptChange: (script: string) => void;
   scriptSettings?: string;
   onScriptSettingsChange: (settings: string) => void;
+  selectedModel: AIModel;
 }
 
 export const ScriptStep = ({ 
@@ -21,7 +22,8 @@ export const ScriptStep = ({
   script, 
   onScriptChange, 
   scriptSettings,
-  onScriptSettingsChange 
+  onScriptSettingsChange,
+  selectedModel
 }: ScriptStepProps) => {
   const [generatedScript, setGeneratedScript] = useState(script || '');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -31,7 +33,7 @@ export const ScriptStep = ({
     
     setIsGenerating(true);
     try {
-      const result = await generateScript(title, hook, scriptSettings);
+      const result = await aiService.generateScript(title, hook, selectedModel, scriptSettings);
       setGeneratedScript(result);
       onScriptChange(result);
       toast.success('Script generated successfully!');

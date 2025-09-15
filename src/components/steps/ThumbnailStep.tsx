@@ -1,36 +1,34 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { generateThumbnailPrompts } from '@/services/deepseekAI';
-import { Textarea } from '@/components/ui/textarea';
+import { aiService, AIModel } from '@/services/aiService';
+import { ThumbnailOption } from '@/types';
 import { Sparkles } from 'lucide-react';
-
-interface ThumbnailOption {
-  prompt_id: number;
-  prompt_text: string;
-}
 
 interface ThumbnailStepProps {
   title?: string;
   hook?: string;
-  prompt?: string;
-  onPromptChange: (prompt: string) => void;
+  thumbnailPrompt?: string;
+  onThumbnailPromptChange: (prompt: string) => void;
   thumbnailSettings?: string;
   onThumbnailSettingsChange: (settings: string) => void;
+  selectedModel: AIModel;
 }
 
 export const ThumbnailStep = ({ 
   title, 
   hook, 
-  prompt, 
-  onPromptChange,
+  thumbnailPrompt,
+  onThumbnailPromptChange,
   thumbnailSettings,
-  onThumbnailSettingsChange 
+  onThumbnailSettingsChange,
+  selectedModel
 }: ThumbnailStepProps) => {
-  const [selectedPrompt, setSelectedPrompt] = useState(prompt || '');
+  const [selectedPrompt, setSelectedPrompt] = useState(thumbnailPrompt || '');
   const [prompts, setPrompts] = useState<ThumbnailOption[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
 
@@ -39,7 +37,7 @@ export const ThumbnailStep = ({
     
     setIsGenerating(true);
     try {
-      const result = await generateThumbnailPrompts(title, hook, thumbnailSettings);
+      const result = await aiService.generateThumbnailPrompts(title, hook, selectedModel, thumbnailSettings);
       setPrompts(result);
       toast.success('Thumbnail prompts generated successfully!');
     } catch (error) {
@@ -51,9 +49,8 @@ export const ThumbnailStep = ({
 
   const handleSelectPrompt = (selectedPrompt: string) => {
     setSelectedPrompt(selectedPrompt);
-    onPromptChange(selectedPrompt);
+    onThumbnailPromptChange(selectedPrompt);
   };
-
 
   return (
     <div className="space-y-6">
@@ -95,20 +92,20 @@ export const ThumbnailStep = ({
               onValueChange={handleSelectPrompt}
               className="space-y-3"
             >
-              {prompts.map((promptOption, index) => (
-                <Card key={promptOption.prompt_id} className="shadow-card hover:shadow-md transition-shadow">
+              {prompts.map((promptOption) => (
+                <Card key={promptOption.id} className="shadow-card hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
                       <RadioGroupItem 
-                        value={promptOption.prompt_text} 
-                        id={`prompt-${promptOption.prompt_id}`}
+                        value={promptOption.text} 
+                        id={`prompt-${promptOption.id}`}
                         className="mt-1"
                       />
                       <Label 
-                        htmlFor={`prompt-${promptOption.prompt_id}`} 
+                        htmlFor={`prompt-${promptOption.id}`} 
                         className="flex-1 text-sm leading-relaxed cursor-pointer"
                       >
-                        {promptOption.prompt_text}
+                        {promptOption.text}
                       </Label>
                     </div>
                   </CardContent>

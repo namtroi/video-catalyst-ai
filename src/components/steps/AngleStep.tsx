@@ -5,13 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { generateAngles } from '@/services/deepseekAI';
+import { aiService, AIModel } from '@/services/aiService';
+import { AngleOption } from '@/types';
 import { Sparkles } from 'lucide-react';
-
-interface AngleOption {
-  id: number;
-  description: string;
-}
 
 interface AngleStepProps {
   topic?: string;
@@ -19,6 +15,7 @@ interface AngleStepProps {
   onAngleChange: (angle: string) => void;
   angleSettings?: string;
   onAngleSettingsChange: (settings: string) => void;
+  selectedModel: AIModel;
 }
 
 export const AngleStep = ({ 
@@ -26,7 +23,8 @@ export const AngleStep = ({
   angle, 
   onAngleChange, 
   angleSettings,
-  onAngleSettingsChange 
+  onAngleSettingsChange,
+  selectedModel
 }: AngleStepProps) => {
   const [selectedAngle, setSelectedAngle] = useState(angle || '');
   const [angles, setAngles] = useState<AngleOption[]>([]);
@@ -37,7 +35,7 @@ export const AngleStep = ({
     
     setIsGenerating(true);
     try {
-      const result = await generateAngles(topic, angleSettings);
+      const result = await aiService.generateAngles(topic, selectedModel, angleSettings);
       setAngles(result);
       toast.success('Angles generated successfully!');
     } catch (error) {
@@ -51,7 +49,6 @@ export const AngleStep = ({
     setSelectedAngle(selectedAngle);
     onAngleChange(selectedAngle);
   };
-
 
   return (
     <div className="space-y-6">

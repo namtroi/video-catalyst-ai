@@ -1,7 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useProjectStore } from '@/hooks/useProjectStore';
+import { useAuth } from '@/hooks/useAuth';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainContent } from '@/components/layout/MainContent';
+import { SettingsPanel } from '@/components/layout/SettingsPanel';
+import { SettingsModal } from '@/components/SettingsModal';
 import { TopicStep } from '@/components/steps/TopicStep';
 import { AngleStep } from '@/components/steps/AngleStep';
 import { HookStep } from '@/components/steps/HookStep';
@@ -10,6 +14,10 @@ import { ThumbnailStep } from '@/components/steps/ThumbnailStep';
 import { ScriptStep } from '@/components/steps/ScriptStep';
 import { ProductionStep } from '@/components/steps/ProductionStep';
 import { ProjectSummary } from '@/components/ProjectSummary';
+import { Button } from '@/components/ui/button';
+import { Settings, LogOut, Youtube } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { AIModel } from '@/services/aiService';
 import { toast } from '@/components/ui/use-toast';
 
 interface StepData {
@@ -22,8 +30,45 @@ interface StepData {
 }
 
 export default function Index() {
+  const { user, loading, signOut } = useAuth();
+  const navigate = useNavigate();
   const { project, updateProject, completeStep, resetProject } = useProjectStore();
   const [showSummary, setShowSummary] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [userSettings, setUserSettings] = useState<{selected_model: AIModel} | null>(null);
+
+  // Redirect to auth if not logged in
+  useEffect(() => {
+    if (!loading && !user) {
+      navigate('/auth');
+    }
+  }, [user, loading, navigate]);
+
+  // Load user settings
+  useEffect(() => {
+    if (user) {
+      loadUserSettings();
+    }
+  }, [user]);
+
+  const loadUserSettings = async () => {
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from('user_settings')
+      .select('selected_model')
+      .eq('user_id', user.id)
+      .maybeSingle();
+
+    if (data) {
+      setUserSettings({ selected_model: data.selected_model as AIModel });
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/auth');
+  };
 
   const totalSteps = 7;
 
@@ -43,7 +88,6 @@ export default function Index() {
   const handleNext = () => {
     const currentStepValid = isStepValid(project.currentStep);
     if (currentStepValid && project.currentStep < totalSteps) {
-      // Auto-complete current step and move to next
       completeStep(project.currentStep);
     }
   };
@@ -61,6 +105,31 @@ export default function Index() {
       title: "Project Reset",
       description: "Starting fresh with a new project.",
     });
+  };
+
+  const getCustomSettings = (step: number) => {
+    switch (step) {
+      case 1: return project.topicSettings || '';
+      case 2: return project.angleSettings || '';
+      case 3: return project.hookSettings || '';
+      case 4: return project.titleSettings || '';
+      case 5: return project.thumbnailSettings || '';
+      case 6: return project.scriptSettings || '';
+      case 7: return project.productionSettings || '';
+      default: return '';
+    }
+  };
+
+  const handleSettingsChange = (step: number, settings: string) => {
+    switch (step) {
+      case 1: updateProject({ topicSettings: settings }); break;
+      case 2: updateProject({ angleSettings: settings }); break;
+      case 3: updateProject({ hookSettings: settings }); break;
+      case 4: updateProject({ titleSettings: settings }); break;
+      case 5: updateProject({ thumbnailSettings: settings }); break;
+      case 6: updateProject({ scriptSettings: settings }); break;
+      case 7: updateProject({ productionSettings: settings }); break;
+    }
   };
 
   const steps = [
@@ -130,16 +199,19 @@ export default function Index() {
   ];
 
   const renderCurrentStep = () => {
+    const selectedModel = userSettings?.selected_model || 'deepseek';
+    
     switch (project.currentStep) {
-        case 1:
-          return (
-            <TopicStep
-              topic={project.topic}
-              onTopicChange={(topic) => updateProject({ topic })}
-              topicSettings={project.topicSettings}
-              onTopicSettingsChange={(topicSettings) => updateProject({ topicSettings })}
-            />
-          );
+      case 1:
+        return (
+          <TopicStep
+            topic={project.topic}
+            onTopicChange={(topic) => updateProject({ topic })}
+            topicSettings={project.topicSettings}
+            onTopicSettingsChange={(topicSettings) => updateProject({ topicSettings })}
+            selectedModel={selectedModel}
+          />
+        );
       case 2:
         return (
           <AngleStep
@@ -148,6 +220,7 @@ export default function Index() {
             onAngleChange={(angle) => updateProject({ angle })}
             angleSettings={project.angleSettings}
             onAngleSettingsChange={(angleSettings) => updateProject({ angleSettings })}
+            selectedModel={selectedModel}
           />
         );
       case 3:
@@ -159,6 +232,7 @@ export default function Index() {
             onHookChange={(hook) => updateProject({ hook })}
             hookSettings={project.hookSettings}
             onHookSettingsChange={(hookSettings) => updateProject({ hookSettings })}
+            selectedModel={selectedModel}
           />
         );
       case 4:
@@ -171,6 +245,7 @@ export default function Index() {
             onTitleChange={(title) => updateProject({ title })}
             titleSettings={project.titleSettings}
             onTitleSettingsChange={(titleSettings) => updateProject({ titleSettings })}
+            selectedModel={selectedModel}
           />
         );
       case 5:
@@ -178,10 +253,11 @@ export default function Index() {
           <ThumbnailStep
             title={project.title}
             hook={project.hook}
-            prompt={project.thumbnailPrompt}
-            onPromptChange={(prompt) => updateProject({ thumbnailPrompt: prompt })}
+            thumbnailPrompt={project.thumbnailPrompt}
+            onThumbnailPromptChange={(prompt) => updateProject({ thumbnailPrompt: prompt })}
             thumbnailSettings={project.thumbnailSettings}
             onThumbnailSettingsChange={(thumbnailSettings) => updateProject({ thumbnailSettings })}
+            selectedModel={selectedModel}
           />
         );
       case 6:
@@ -193,6 +269,7 @@ export default function Index() {
             onScriptChange={(script) => updateProject({ script })}
             scriptSettings={project.scriptSettings}
             onScriptSettingsChange={(scriptSettings) => updateProject({ scriptSettings })}
+            selectedModel={selectedModel}
           />
         );
       case 7:
@@ -204,12 +281,28 @@ export default function Index() {
             productionSettings={project.productionSettings}
             onProductionSettingsChange={(productionSettings) => updateProject({ productionSettings })}
             onShowSummary={() => setShowSummary(true)}
+            selectedModel={selectedModel}
           />
         );
       default:
         return null;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center space-y-4">
+          <Youtube className="h-12 w-12 text-primary mx-auto animate-pulse" />
+          <p className="text-muted-foreground">Loading YouTube Catalyst...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null;
+  }
 
   if (showSummary) {
     return (
@@ -230,16 +323,54 @@ export default function Index() {
         onStartOver={handleStartOver}
       />
       
-      <MainContent
-        currentStep={project.currentStep}
-        totalSteps={totalSteps}
-        canGoNext={project.currentStep < totalSteps && isStepValid(project.currentStep)}
-        canGoPrev={project.currentStep > 1}
-        onNext={handleNext}
-        onPrev={handlePrev}
-      >
-        {renderCurrentStep()}
-      </MainContent>
+      <div className="flex-1 flex flex-col">
+        {/* Header */}
+        <div className="h-16 border-b border-border flex items-center justify-between px-6 bg-card">
+          <div className="flex items-center gap-3">
+            <Youtube className="h-6 w-6 text-primary" />
+            <h1 className="text-lg font-semibold">YouTube Catalyst</h1>
+            {userSettings && (
+              <span className="text-sm text-muted-foreground px-2 py-1 bg-muted rounded">
+                {userSettings.selected_model === 'deepseek' ? 'Deepseek' : 'ChatGPT'}
+              </span>
+            )}
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => setShowSettings(true)}>
+              <Settings className="h-4 w-4 mr-2" />
+              Settings
+            </Button>
+            <Button variant="outline" size="sm" onClick={handleSignOut}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Sign Out
+            </Button>
+          </div>
+        </div>
+
+        <div className="flex flex-1">
+          <MainContent
+            currentStep={project.currentStep}
+            totalSteps={totalSteps}
+            canGoNext={project.currentStep < totalSteps && isStepValid(project.currentStep)}
+            canGoPrev={project.currentStep > 1}
+            onNext={handleNext}
+            onPrev={handlePrev}
+          >
+            {renderCurrentStep()}
+          </MainContent>
+          
+          <SettingsPanel
+            customSettings={getCustomSettings(project.currentStep)}
+            onSettingsChange={(settings) => handleSettingsChange(project.currentStep, settings)}
+          />
+        </div>
+      </div>
+
+      <SettingsModal 
+        open={showSettings} 
+        onOpenChange={setShowSettings} 
+      />
     </div>
   );
 }

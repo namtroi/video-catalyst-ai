@@ -5,13 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { generateHooks } from '@/services/deepseekAI';
+import { aiService, AIModel } from '@/services/aiService';
+import { HookOption } from '@/types';
 import { Sparkles } from 'lucide-react';
-
-interface HookOption {
-  hook_id: number;
-  hook_text: string;
-}
 
 interface HookStepProps {
   topic?: string;
@@ -20,6 +16,7 @@ interface HookStepProps {
   onHookChange: (hook: string) => void;
   hookSettings?: string;
   onHookSettingsChange: (settings: string) => void;
+  selectedModel: AIModel;
 }
 
 export const HookStep = ({ 
@@ -28,7 +25,8 @@ export const HookStep = ({
   hook, 
   onHookChange, 
   hookSettings,
-  onHookSettingsChange 
+  onHookSettingsChange,
+  selectedModel
 }: HookStepProps) => {
   const [selectedHook, setSelectedHook] = useState(hook || '');
   const [hooks, setHooks] = useState<HookOption[]>([]);
@@ -39,7 +37,7 @@ export const HookStep = ({
     
     setIsGenerating(true);
     try {
-      const result = await generateHooks(topic, angle, hookSettings);
+      const result = await aiService.generateHooks(topic, angle, selectedModel, hookSettings);
       setHooks(result);
       toast.success('Hooks generated successfully!');
     } catch (error) {
@@ -53,7 +51,6 @@ export const HookStep = ({
     setSelectedHook(selectedHook);
     onHookChange(selectedHook);
   };
-
 
   return (
     <div className="space-y-6">
@@ -95,20 +92,20 @@ export const HookStep = ({
               onValueChange={handleSelectHook}
               className="space-y-3"
             >
-              {hooks.map((hookOption, index) => (
-                <Card key={hookOption.hook_id} className="shadow-card hover:shadow-md transition-shadow">
+              {hooks.map((hookOption) => (
+                <Card key={hookOption.id} className="shadow-card hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
                       <RadioGroupItem 
-                        value={hookOption.hook_text} 
-                        id={`hook-${hookOption.hook_id}`}
+                        value={hookOption.text} 
+                        id={`hook-${hookOption.id}`}
                         className="mt-1"
                       />
                       <Label 
-                        htmlFor={`hook-${hookOption.hook_id}`} 
+                        htmlFor={`hook-${hookOption.id}`} 
                         className="flex-1 text-sm leading-relaxed cursor-pointer"
                       >
-                        {hookOption.hook_text}
+                        {hookOption.text}
                       </Label>
                     </div>
                   </CardContent>

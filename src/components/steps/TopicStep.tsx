@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { generateTopic } from '@/services/deepseekAI';
+import { aiService, AIModel } from '@/services/aiService';
 import { Sparkles } from 'lucide-react';
 
 interface TopicStepProps {
@@ -11,13 +11,15 @@ interface TopicStepProps {
   onTopicChange: (topic: string) => void;
   topicSettings?: string;
   onTopicSettingsChange: (settings: string) => void;
+  selectedModel: AIModel;
 }
 
 export const TopicStep = ({ 
   topic, 
   onTopicChange, 
   topicSettings,
-  onTopicSettingsChange 
+  onTopicSettingsChange,
+  selectedModel
 }: TopicStepProps) => {
   const [inputTopic, setInputTopic] = useState(topic || '');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -31,7 +33,7 @@ export const TopicStep = ({
   const generateRandomTopic = async () => {
     setIsGenerating(true);
     try {
-      const result = await generateTopic(topicSettings);
+      const result = await aiService.generateTopic(selectedModel, topicSettings);
       handleTopicChange(result);
       toast.success('Topic generated successfully!');
     } catch (error) {

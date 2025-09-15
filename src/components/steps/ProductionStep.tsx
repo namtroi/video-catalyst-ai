@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { generateImageVideoPrompts } from '@/services/deepseekAI';
+import { aiService, AIModel } from '@/services/aiService';
 import { ScenesResponse } from '@/types';
 import { Sparkles } from 'lucide-react';
 
@@ -14,6 +14,7 @@ interface ProductionStepProps {
   productionSettings?: string;
   onProductionSettingsChange: (settings: string) => void;
   onShowSummary: () => void;
+  selectedModel: AIModel;
 }
 
 export const ProductionStep = ({ 
@@ -22,7 +23,8 @@ export const ProductionStep = ({
   onImageVideoPromptsChange, 
   productionSettings,
   onProductionSettingsChange,
-  onShowSummary 
+  onShowSummary,
+  selectedModel
 }: ProductionStepProps) => {
   const [generatedPrompts, setGeneratedPrompts] = useState(imageVideoPrompts || '');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -32,7 +34,7 @@ export const ProductionStep = ({
     
     setIsGenerating(true);
     try {
-      const result = await generateImageVideoPrompts(script, productionSettings);
+      const result = await aiService.generateImageVideoPrompts(script, selectedModel, productionSettings);
       const formattedResult = JSON.stringify(result, null, 2);
       setGeneratedPrompts(formattedResult);
       onImageVideoPromptsChange(formattedResult);

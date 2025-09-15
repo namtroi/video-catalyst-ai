@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
-import { generateTitles } from '@/services/deepseekAI';
+import { aiService, AIModel } from '@/services/aiService';
+import { TitleOption } from '@/types';
 import { Sparkles } from 'lucide-react';
-
-interface TitleOption {
-  title_id: number;
-  title_text: string;
-}
-import { Textarea } from '@/components/ui/textarea';
 
 interface TitleStepProps {
   topic?: string;
@@ -21,6 +17,7 @@ interface TitleStepProps {
   onTitleChange: (title: string) => void;
   titleSettings?: string;
   onTitleSettingsChange: (settings: string) => void;
+  selectedModel: AIModel;
 }
 
 export const TitleStep = ({ 
@@ -30,7 +27,8 @@ export const TitleStep = ({
   title, 
   onTitleChange, 
   titleSettings,
-  onTitleSettingsChange 
+  onTitleSettingsChange,
+  selectedModel
 }: TitleStepProps) => {
   const [selectedTitle, setSelectedTitle] = useState(title || '');
   const [titles, setTitles] = useState<TitleOption[]>([]);
@@ -41,7 +39,7 @@ export const TitleStep = ({
     
     setIsGenerating(true);
     try {
-      const result = await generateTitles(topic, angle, hook, titleSettings);
+      const result = await aiService.generateTitles(topic, angle, hook, selectedModel, titleSettings);
       setTitles(result);
       toast.success('Titles generated successfully!');
     } catch (error) {
@@ -55,7 +53,6 @@ export const TitleStep = ({
     setSelectedTitle(selectedTitle);
     onTitleChange(selectedTitle);
   };
-
 
   return (
     <div className="space-y-6">
@@ -104,20 +101,20 @@ export const TitleStep = ({
               onValueChange={handleSelectTitle}
               className="space-y-3"
             >
-              {titles.map((titleOption, index) => (
-                <Card key={titleOption.title_id} className="shadow-card hover:shadow-md transition-shadow">
+              {titles.map((titleOption) => (
+                <Card key={titleOption.id} className="shadow-card hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-start space-x-3">
                       <RadioGroupItem 
-                        value={titleOption.title_text} 
-                        id={`title-${titleOption.title_id}`}
+                        value={titleOption.text} 
+                        id={`title-${titleOption.id}`}
                         className="mt-1"
                       />
                       <Label 
-                        htmlFor={`title-${titleOption.title_id}`} 
+                        htmlFor={`title-${titleOption.id}`} 
                         className="flex-1 text-sm leading-relaxed cursor-pointer font-medium"
                       >
-                        {titleOption.title_text}
+                        {titleOption.text}
                       </Label>
                     </div>
                   </CardContent>
