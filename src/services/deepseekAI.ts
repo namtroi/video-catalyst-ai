@@ -1,3 +1,5 @@
+import { Scene, ScenesResponse } from '@/types';
+
 const DEEPSEEK_API_KEY = 'sk-d9d31b467d314a63919561d49cc95637';
 const DEEPSEEK_API_URL = 'https://api.deepseek.com/v1/chat/completions';
 
@@ -297,7 +299,7 @@ export const generateScript = async (title: string, hook: string, customSettings
   return generateWithDeepseek(prompt, customSettings);
 };
 
-export const generateImageVideoPrompts = async (script: string, customSettings?: string): Promise<string> => {
+export const generateImageVideoPrompts = async (script: string, customSettings?: string): Promise<ScenesResponse> => {
   const prompt = `From the full script '${script}', break it into 10-20 scene segments. For each: Generate a detailed image prompt (DALL-E style for static visuals) and a Veo 3 video prompt (for animating the image into 5-10 second clips). Ensure consistency in style/theme.
   
   Respond ONLY with a valid JSON object like this structure:
@@ -322,12 +324,32 @@ export const generateImageVideoPrompts = async (script: string, customSettings?:
   ]
 }
 
-
-  Do not include any additional text, explanations, or markdown outside the JSON.
+  Do not include any additional text, explanations, or markdown outside the JSON.`;
   
+  const response = await generateWithDeepseek(prompt, customSettings);
   
-  
-  
-  `;
-  return generateWithDeepseek(prompt, customSettings);
+  try {
+    // Clean the response to extract JSON
+    const cleanedResponse = response.trim();
+    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? jsonMatch[0] : cleanedResponse;
+    
+    const parsedData: ScenesResponse = JSON.parse(jsonString);
+    
+    if (!parsedData.scenes || !Array.isArray(parsedData.scenes)) {
+      throw new Error('Invalid scenes format in response');
+    }
+    
+    return parsedData;
+  } catch (error) {
+    console.error('Failed to parse scenes JSON:', error);
+    // Fallback: return response as string wrapped in a scenes structure
+    return {
+      scenes: [{
+        scene_number: 1,
+        image_prompt: response.substring(0, response.length / 2),
+        video_prompt: response.substring(response.length / 2)
+      }]
+    };
+  }
 };

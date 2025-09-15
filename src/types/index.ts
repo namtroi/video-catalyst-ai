@@ -37,6 +37,16 @@ export interface GenerationOption {
   selected?: boolean;
 }
 
+export interface Scene {
+  scene_number: number;
+  image_prompt: string;
+  video_prompt: string;
+}
+
+export interface ScenesResponse {
+  scenes: Scene[];
+}
+
 export interface AIGenerationResponse {
   success: boolean;
   data?: string | GenerationOption[];

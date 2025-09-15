@@ -18,7 +18,7 @@ import {
   Moon,
   Sun
 } from 'lucide-react';
-import { VideoProject } from '@/types';
+import { VideoProject, Scene, ScenesResponse } from '@/types';
 import { toast } from '@/hooks/use-toast';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
@@ -169,16 +169,22 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
   };
 
   // Parse production prompts into scenes
-  const parseScenes = (prompts: string) => {
-    const scenes = prompts.split(/Scene \d+:/i).filter(scene => scene.trim());
-    return scenes.map((scene, index) => {
-      const [imagePrompt, videoPrompt] = scene.split(/Video Prompt:/i);
-      return {
-        number: index + 1,
-        imagePrompt: imagePrompt?.replace(/Image Prompt:/i, '').trim() || '',
-        videoPrompt: videoPrompt?.trim() || ''
-      };
-    });
+  const parseScenes = (prompts: string): Scene[] => {
+    try {
+      const parsed: ScenesResponse = JSON.parse(prompts);
+      return parsed.scenes || [];
+    } catch (error) {
+      // Fallback for old text format
+      const scenes = prompts.split(/Scene \d+:/i).filter(scene => scene.trim());
+      return scenes.map((scene, index) => {
+        const [imagePrompt, videoPrompt] = scene.split(/Video Prompt:/i);
+        return {
+          scene_number: index + 1,
+          image_prompt: imagePrompt?.replace(/Image Prompt:/i, '').trim() || '',
+          video_prompt: videoPrompt?.trim() || ''
+        };
+      });
+    }
   };
 
   const scenes = project.imageVideoPrompts ? parseScenes(project.imageVideoPrompts) : [];
@@ -427,15 +433,15 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
               Image & Video Production Prompts
             </h2>
             
-            {scenes.length > 0 ? (
+             {scenes.length > 0 ? (
               <ol className="space-y-6">
                 {scenes.map((scene) => (
-                  <li key={scene.number} className="space-y-3">
+                  <li key={scene.scene_number} className="space-y-3">
                     <h3 className="text-lg font-semibold text-foreground print:text-black">
-                      Scene {scene.number}
+                      Scene {scene.scene_number}
                     </h3>
                     
-                    {scene.imagePrompt && (
+                    {scene.image_prompt && (
                       <Card className="shadow-sm print:shadow-none print:border print:border-gray-200">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-center">
@@ -444,7 +450,7 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
                               Image Prompt
                             </h4>
                             <Button
-                              onClick={() => copyToClipboard(scene.imagePrompt, `Scene ${scene.number} Image Prompt`)}
+                              onClick={() => copyToClipboard(scene.image_prompt, `Scene ${scene.scene_number} Image Prompt`)}
                               variant="ghost"
                               size="sm"
                               className="print:hidden"
@@ -454,12 +460,12 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <p className="text-sm text-foreground print:text-black">{scene.imagePrompt}</p>
+                          <p className="text-sm text-foreground print:text-black">{scene.image_prompt}</p>
                         </CardContent>
                       </Card>
                     )}
                     
-                    {scene.videoPrompt && (
+                    {scene.video_prompt && (
                       <Card className="shadow-sm print:shadow-none print:border print:border-gray-200">
                         <CardHeader className="pb-2">
                           <div className="flex justify-between items-center">
@@ -468,7 +474,7 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
                               Video Prompt
                             </h4>
                             <Button
-                              onClick={() => copyToClipboard(scene.videoPrompt, `Scene ${scene.number} Video Prompt`)}
+                              onClick={() => copyToClipboard(scene.video_prompt, `Scene ${scene.scene_number} Video Prompt`)}
                               variant="ghost"
                               size="sm"
                               className="print:hidden"
@@ -478,7 +484,7 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0">
-                          <p className="text-sm text-foreground print:text-black">{scene.videoPrompt}</p>
+                          <p className="text-sm text-foreground print:text-black">{scene.video_prompt}</p>
                         </CardContent>
                       </Card>
                     )}

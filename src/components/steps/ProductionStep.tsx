@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { generateImageVideoPrompts } from '@/services/deepseekAI';
+import { ScenesResponse } from '@/types';
 
 interface ProductionStepProps {
   script?: string;
@@ -31,8 +32,9 @@ export const ProductionStep = ({
     setIsGenerating(true);
     try {
       const result = await generateImageVideoPrompts(script, productionSettings);
-      setGeneratedPrompts(result);
-      onImageVideoPromptsChange(result);
+      const formattedResult = JSON.stringify(result, null, 2);
+      setGeneratedPrompts(formattedResult);
+      onImageVideoPromptsChange(formattedResult);
       toast.success('Production prompts generated successfully!');
     } catch (error) {
       toast.error('Failed to generate production prompts. Please try again.');
