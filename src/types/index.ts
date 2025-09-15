@@ -7,7 +7,14 @@ export interface VideoProject {
   thumbnailPrompt?: string;
   script?: string;
   imageVideoPrompts?: string;
-  customSettings?: string;
+  // Step-specific custom settings
+  topicSettings?: string;
+  angleSettings?: string;
+  hookSettings?: string;
+  titleSettings?: string;
+  thumbnailSettings?: string;
+  scriptSettings?: string;
+  productionSettings?: string;
   currentStep: number;
   completedSteps: boolean[];
   createdAt: Date;

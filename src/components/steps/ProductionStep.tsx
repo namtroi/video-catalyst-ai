@@ -13,7 +13,8 @@ interface ProductionStepProps {
   onImageVideoPromptsChange: (prompts: string) => void;
   onComplete: () => void;
   isCompleted: boolean;
-  customSettings?: string;
+  productionSettings?: string;
+  onProductionSettingsChange: (settings: string) => void;
   onShowSummary?: () => void;
 }
 
@@ -23,7 +24,8 @@ export const ProductionStep = ({
   onImageVideoPromptsChange, 
   onComplete, 
   isCompleted,
-  customSettings,
+  productionSettings,
+  onProductionSettingsChange,
   onShowSummary 
 }: ProductionStepProps) => {
   const [generatedPrompts, setGeneratedPrompts] = useState(imageVideoPrompts || '');
@@ -32,7 +34,7 @@ export const ProductionStep = ({
   const generatePromptsFromAI = async () => {
     setIsGenerating(true);
     try {
-      const prompts = await generateImageVideoPrompts(script, customSettings);
+      const prompts = await generateImageVideoPrompts(script, productionSettings);
       setGeneratedPrompts(prompts);
       
       toast({

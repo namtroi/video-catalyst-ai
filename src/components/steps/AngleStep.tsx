@@ -4,7 +4,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import { Loader2, RefreshCw } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Textarea } from '@/components/ui/textarea';
+import { Loader2, RefreshCw, ChevronDown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { generateAngles } from '@/services/deepseekAI';
 
@@ -14,7 +16,8 @@ interface AngleStepProps {
   onAngleChange: (angle: string) => void;
   onComplete: () => void;
   isCompleted: boolean;
-  customSettings?: string;
+  angleSettings?: string;
+  onAngleSettingsChange: (settings: string) => void;
 }
 
 export const AngleStep = ({ 
@@ -23,16 +26,18 @@ export const AngleStep = ({
   onAngleChange, 
   onComplete, 
   isCompleted,
-  customSettings 
+  angleSettings,
+  onAngleSettingsChange 
 }: AngleStepProps) => {
   const [selectedAngle, setSelectedAngle] = useState(angle || '');
   const [angles, setAngles] = useState<string[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [customSettingsOpen, setCustomSettingsOpen] = useState(false);
 
   const generateAnglesFromAI = async () => {
     setIsGenerating(true);
     try {
-      const generatedAngles = await generateAngles(topic, customSettings);
+      const generatedAngles = await generateAngles(topic, angleSettings);
       setAngles(generatedAngles);
       
       toast({
@@ -134,6 +139,30 @@ export const AngleStep = ({
             </>
           )}
         </Button>
+
+        <Collapsible open={customSettingsOpen} onOpenChange={setCustomSettingsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+              <span className="text-sm font-medium">Customize Generation</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${customSettingsOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2">
+            <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+              <Label htmlFor="angle-settings" className="text-xs text-muted-foreground">
+                Additional Instructions
+              </Label>
+              <Textarea
+                id="angle-settings"
+                value={angleSettings || ''}
+                onChange={(e) => onAngleSettingsChange(e.target.value)}
+                placeholder="Add extra instructions for angle generation (e.g., 'Focus on contrarian views', 'Include emotional angles', 'Target specific demographics')"
+                className="min-h-[80px] text-sm"
+                disabled={isCompleted}
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         <div className="flex items-center space-x-2 pt-4">
           <Checkbox

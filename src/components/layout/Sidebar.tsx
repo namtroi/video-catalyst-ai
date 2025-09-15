@@ -1,13 +1,16 @@
-import { Check, ChevronRight } from 'lucide-react';
+import { Check, ChevronRight, RotateCcw } from 'lucide-react';
 import { StepData } from '@/types';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 
 interface SidebarProps {
   steps: StepData[];
   onStepClick: (step: number) => void;
+  onStartOver: () => void;
 }
 
-export const Sidebar = ({ steps, onStepClick }: SidebarProps) => {
+export const Sidebar = ({ steps, onStepClick, onStartOver }: SidebarProps) => {
   const completedCount = steps.filter(step => step.isCompleted).length;
   const progressPercentage = (completedCount / steps.length) * 100;
 
@@ -15,9 +18,35 @@ export const Sidebar = ({ steps, onStepClick }: SidebarProps) => {
     <div className="w-72 bg-card border-r border-border h-full flex flex-col">
       {/* Progress Header */}
       <div className="p-6 border-b border-border">
-        <h2 className="text-lg font-semibold text-foreground mb-3">
-          YouTube Content Pipeline
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold text-foreground">
+            YouTube Content Pipeline
+          </h2>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground">
+                <RotateCcw className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Start Over?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will reset all your progress and delete all generated content. This action cannot be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogAction 
+                  onClick={onStartOver}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  Start Over
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Progress</span>

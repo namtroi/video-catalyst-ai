@@ -14,7 +14,8 @@ interface ScriptStepProps {
   onScriptChange: (script: string) => void;
   onComplete: () => void;
   isCompleted: boolean;
-  customSettings?: string;
+  scriptSettings?: string;
+  onScriptSettingsChange: (settings: string) => void;
 }
 
 export const ScriptStep = ({ 
@@ -24,7 +25,8 @@ export const ScriptStep = ({
   onScriptChange, 
   onComplete, 
   isCompleted,
-  customSettings 
+  scriptSettings,
+  onScriptSettingsChange 
 }: ScriptStepProps) => {
   const [generatedScript, setGeneratedScript] = useState(script || '');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -32,7 +34,7 @@ export const ScriptStep = ({
   const generateScriptFromAI = async () => {
     setIsGenerating(true);
     try {
-      const script = await generateScript(title, hook, customSettings);
+      const script = await generateScript(title, hook, scriptSettings);
       setGeneratedScript(script);
       
       toast({

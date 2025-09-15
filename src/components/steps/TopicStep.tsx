@@ -3,7 +3,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent } from '@/components/ui/card';
-import { Loader2, Sparkles } from 'lucide-react';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Label } from '@/components/ui/label';
+import { Loader2, Sparkles, ChevronDown } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { generateTopic } from '@/services/deepseekAI';
 
@@ -12,7 +14,8 @@ interface TopicStepProps {
   onTopicChange: (topic: string) => void;
   onComplete: () => void;
   isCompleted: boolean;
-  customSettings?: string;
+  topicSettings?: string;
+  onTopicSettingsChange: (settings: string) => void;
 }
 
 export const TopicStep = ({ 
@@ -20,16 +23,18 @@ export const TopicStep = ({
   onTopicChange, 
   onComplete, 
   isCompleted,
-  customSettings 
+  topicSettings,
+  onTopicSettingsChange 
 }: TopicStepProps) => {
   const [inputTopic, setInputTopic] = useState(topic || '');
   const [generatedTopic, setGeneratedTopic] = useState(topic || '');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [customSettingsOpen, setCustomSettingsOpen] = useState(false);
 
   const generateRandomTopic = async () => {
     setIsGenerating(true);
     try {
-      const generatedTopicText = await generateTopic(customSettings);
+      const generatedTopicText = await generateTopic(topicSettings);
       setGeneratedTopic(generatedTopicText);
       setInputTopic(generatedTopicText);
       
@@ -106,6 +111,30 @@ export const TopicStep = ({
             </CardContent>
           </Card>
         )}
+
+        <Collapsible open={customSettingsOpen} onOpenChange={setCustomSettingsOpen}>
+          <CollapsibleTrigger asChild>
+            <Button variant="ghost" className="w-full justify-between p-2 h-auto">
+              <span className="text-sm font-medium">Customize Generation</span>
+              <ChevronDown className={`w-4 h-4 transition-transform ${customSettingsOpen ? 'rotate-180' : ''}`} />
+            </Button>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-2">
+            <div className="p-3 bg-muted/50 rounded-lg space-y-2">
+              <Label htmlFor="topic-settings" className="text-xs text-muted-foreground">
+                Additional Instructions
+              </Label>
+              <Textarea
+                id="topic-settings"
+                value={topicSettings || ''}
+                onChange={(e) => onTopicSettingsChange(e.target.value)}
+                placeholder="Add extra instructions for topic generation (e.g., 'Focus on educational content', 'Target young adults', 'Include trending topics')"
+                className="min-h-[80px] text-sm"
+                disabled={isCompleted}
+              />
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
 
         <div className="flex items-center space-x-2 pt-4">
           <Checkbox

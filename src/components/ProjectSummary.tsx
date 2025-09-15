@@ -62,7 +62,14 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
       thumbnailPrompt: project.thumbnailPrompt,
       script: project.script,
       imageVideoPrompts: project.imageVideoPrompts,
-      customSettings: project.customSettings,
+      // Step-specific settings combined
+      topicSettings: project.topicSettings,
+      angleSettings: project.angleSettings,
+      hookSettings: project.hookSettings,
+      titleSettings: project.titleSettings,
+      thumbnailSettings: project.thumbnailSettings,
+      scriptSettings: project.scriptSettings,
+      productionSettings: project.productionSettings,
       createdAt: project.createdAt,
       updatedAt: project.updatedAt
     };
@@ -77,7 +84,15 @@ export const ProjectSummary = ({ project, onBackToSteps }: ProjectSummaryProps) 
     if (project.thumbnailPrompt) zip.file("05-thumbnail-prompt.txt", project.thumbnailPrompt);
     if (project.script) zip.file("06-script.txt", project.script);
     if (project.imageVideoPrompts) zip.file("07-production-prompts.txt", project.imageVideoPrompts);
-    if (project.customSettings) zip.file("custom-settings.txt", project.customSettings);
+    
+    // Add settings files
+    if (project.topicSettings) zip.file("settings/topic-settings.txt", project.topicSettings);
+    if (project.angleSettings) zip.file("settings/angle-settings.txt", project.angleSettings);
+    if (project.hookSettings) zip.file("settings/hook-settings.txt", project.hookSettings);
+    if (project.titleSettings) zip.file("settings/title-settings.txt", project.titleSettings);
+    if (project.thumbnailSettings) zip.file("settings/thumbnail-settings.txt", project.thumbnailSettings);
+    if (project.scriptSettings) zip.file("settings/script-settings.txt", project.scriptSettings);
+    if (project.productionSettings) zip.file("settings/production-settings.txt", project.productionSettings);
     
     // Generate and download
     const content = await zip.generateAsync({ type: "blob" });

@@ -15,7 +15,8 @@ interface ThumbnailStepProps {
   onThumbnailPromptChange: (prompt: string) => void;
   onComplete: () => void;
   isCompleted: boolean;
-  customSettings?: string;
+  thumbnailSettings?: string;
+  onThumbnailSettingsChange: (settings: string) => void;
 }
 
 export const ThumbnailStep = ({ 
@@ -25,7 +26,8 @@ export const ThumbnailStep = ({
   onThumbnailPromptChange, 
   onComplete, 
   isCompleted,
-  customSettings 
+  thumbnailSettings,
+  onThumbnailSettingsChange 
 }: ThumbnailStepProps) => {
   const [selectedPrompt, setSelectedPrompt] = useState(thumbnailPrompt || '');
   const [prompts, setPrompts] = useState<string[]>([]);
@@ -34,7 +36,7 @@ export const ThumbnailStep = ({
   const generatePromptsFromAI = async () => {
     setIsGenerating(true);
     try {
-      const generatedPrompts = await generateThumbnailPrompts(title, hook, customSettings);
+      const generatedPrompts = await generateThumbnailPrompts(title, hook, thumbnailSettings);
       setPrompts(generatedPrompts);
       
       toast({

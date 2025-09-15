@@ -16,7 +16,8 @@ interface TitleStepProps {
   onTitleChange: (title: string) => void;
   onComplete: () => void;
   isCompleted: boolean;
-  customSettings?: string;
+  titleSettings?: string;
+  onTitleSettingsChange: (settings: string) => void;
 }
 
 export const TitleStep = ({ 
@@ -27,7 +28,8 @@ export const TitleStep = ({
   onTitleChange, 
   onComplete, 
   isCompleted,
-  customSettings 
+  titleSettings,
+  onTitleSettingsChange 
 }: TitleStepProps) => {
   const [selectedTitle, setSelectedTitle] = useState(title || '');
   const [titles, setTitles] = useState<string[]>([]);
@@ -36,7 +38,7 @@ export const TitleStep = ({
   const generateTitlesFromAI = async () => {
     setIsGenerating(true);
     try {
-      const generatedTitles = await generateTitles(topic, angle, hook, customSettings);
+      const generatedTitles = await generateTitles(topic, angle, hook, titleSettings);
       setTitles(generatedTitles);
       
       toast({

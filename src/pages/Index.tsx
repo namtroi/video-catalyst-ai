@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainContent } from '@/components/layout/MainContent';
-import { SettingsPanel } from '@/components/layout/SettingsPanel';
 import { TopicStep } from '@/components/steps/TopicStep';
 import { AngleStep } from '@/components/steps/AngleStep';
 import { HookStep } from '@/components/steps/HookStep';
@@ -12,9 +11,10 @@ import { ProductionStep } from '@/components/steps/ProductionStep';
 import { ProjectSummary } from '@/components/ProjectSummary';
 import { useProjectStore } from '@/hooks/useProjectStore';
 import { StepData } from '@/types';
+import { toast } from '@/hooks/use-toast';
 
 const Index = () => {
-  const { project, updateProject, completeStep, goToStep } = useProjectStore();
+  const { project, updateProject, completeStep, goToStep, resetProject } = useProjectStore();
   const [showSummary, setShowSummary] = useState(false);
 
   const steps: StepData[] = [
@@ -99,6 +99,15 @@ const Index = () => {
     }
   };
 
+  const handleStartOver = () => {
+    resetProject();
+    setShowSummary(false);
+    toast({
+      title: "Project Reset",
+      description: "Starting fresh with a new project.",
+    });
+  };
+
   const canGoNext = project.currentStep < 7 && project.completedSteps[project.currentStep - 1];
   const canGoPrev = project.currentStep > 1;
 
@@ -111,7 +120,8 @@ const Index = () => {
             onTopicChange={(topic) => updateProject({ topic })}
             onComplete={() => handleStepComplete(1)}
             isCompleted={project.completedSteps[0]}
-            customSettings={project.customSettings}
+            topicSettings={project.topicSettings}
+            onTopicSettingsChange={(topicSettings) => updateProject({ topicSettings })}
           />
         );
       case 2:
@@ -122,7 +132,8 @@ const Index = () => {
             onAngleChange={(angle) => updateProject({ angle })}
             onComplete={() => handleStepComplete(2)}
             isCompleted={project.completedSteps[1]}
-            customSettings={project.customSettings}
+            angleSettings={project.angleSettings}
+            onAngleSettingsChange={(angleSettings) => updateProject({ angleSettings })}
           />
         );
       case 3:
@@ -134,7 +145,8 @@ const Index = () => {
             onHookChange={(hook) => updateProject({ hook })}
             onComplete={() => handleStepComplete(3)}
             isCompleted={project.completedSteps[2]}
-            customSettings={project.customSettings}
+            hookSettings={project.hookSettings}
+            onHookSettingsChange={(hookSettings) => updateProject({ hookSettings })}
           />
         );
       case 4:
@@ -147,7 +159,8 @@ const Index = () => {
             onTitleChange={(title) => updateProject({ title })}
             onComplete={() => handleStepComplete(4)}
             isCompleted={project.completedSteps[3]}
-            customSettings={project.customSettings}
+            titleSettings={project.titleSettings}
+            onTitleSettingsChange={(titleSettings) => updateProject({ titleSettings })}
           />
         );
       case 5:
@@ -159,7 +172,8 @@ const Index = () => {
             onThumbnailPromptChange={(thumbnailPrompt) => updateProject({ thumbnailPrompt })}
             onComplete={() => handleStepComplete(5)}
             isCompleted={project.completedSteps[4]}
-            customSettings={project.customSettings}
+            thumbnailSettings={project.thumbnailSettings}
+            onThumbnailSettingsChange={(thumbnailSettings) => updateProject({ thumbnailSettings })}
           />
         );
       case 6:
@@ -171,7 +185,8 @@ const Index = () => {
             onScriptChange={(script) => updateProject({ script })}
             onComplete={() => handleStepComplete(6)}
             isCompleted={project.completedSteps[5]}
-            customSettings={project.customSettings}
+            scriptSettings={project.scriptSettings}
+            onScriptSettingsChange={(scriptSettings) => updateProject({ scriptSettings })}
           />
         );
       case 7:
@@ -182,7 +197,8 @@ const Index = () => {
             onImageVideoPromptsChange={(imageVideoPrompts) => updateProject({ imageVideoPrompts })}
             onComplete={() => handleStepComplete(7)}
             isCompleted={project.completedSteps[6]}
-            customSettings={project.customSettings}
+            productionSettings={project.productionSettings}
+            onProductionSettingsChange={(productionSettings) => updateProject({ productionSettings })}
             onShowSummary={() => setShowSummary(true)}
           />
         );
@@ -207,6 +223,7 @@ const Index = () => {
       <Sidebar 
         steps={steps} 
         onStepClick={goToStep}
+        onStartOver={handleStartOver}
       />
 
       {/* Main Content */}
@@ -220,12 +237,6 @@ const Index = () => {
       >
         {renderCurrentStep()}
       </MainContent>
-
-      {/* Right Settings Panel */}
-      <SettingsPanel
-        customSettings={project.customSettings || ''}
-        onSettingsChange={(customSettings) => updateProject({ customSettings })}
-      />
     </div>
   );
 };
