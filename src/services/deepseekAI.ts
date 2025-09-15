@@ -110,7 +110,31 @@ Do not include any additional text, explanations, or markdown outside the JSON.`
 };
 
 export const generateHooks = async (topic: string, angle: string, customSettings?: string): Promise<string[]> => {
-  const prompt = `From the topic '${topic}' and angle '${angle}', generate 3 compelling video hooks (first 30-60 seconds script snippets) to hook viewers immediately. Make them intriguing and story-driven. Format as numbered list.`;
+  const prompt = `From the topic '${topic}' and angle '${angle}', generate 3 compelling video hooks (first 30-60 seconds script snippets) to hook viewers immediately. Make them intriguing and story-driven. Format as numbered list.
+
+   
+    Respond ONLY with a valid JSON object in this exact structure:
+{
+  "hooks": [
+    {
+    "hook_id": 1,
+    "hook_text": "Full script snippet for Hook 1 here..."
+  },
+  {
+    "hook_id": 2,
+    "hook_text": "Full script snippet for Hook 2 here..."
+  },
+  {
+    "hook_id": 3,
+    "hook_text": "Full script snippet for Hook 3 here..."
+  }
+  ]
+}
+
+Do not include any additional text, explanations, or markdown outside the JSON.
+  
+  
+  `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
   const lines = response.split('\n').filter(line => line.trim());
@@ -118,7 +142,31 @@ export const generateHooks = async (topic: string, angle: string, customSettings
 };
 
 export const generateTitles = async (topic: string, angle: string, hook: string, customSettings?: string): Promise<string[]> => {
-  const prompt = `From the hook '${hook}' (and underlying topic/angle), generate 3 SEO-optimized YouTube titles that are clickbait-y yet honest, under 60 characters each. Aim for curiosity or benefit-driven. Format as numbered list.`;
+  const prompt = `From the hook '${hook}' (and underlying topic/angle), generate 3 SEO-optimized YouTube titles that are clickbait-y yet honest, under 60 characters each. Aim for curiosity or benefit-driven. Format as numbered list.
+  
+  
+  Respond ONLY with a valid JSON object in this exact structure:
+{
+  "titles": [
+    {
+      "title_id": 1,
+      "title_text": "Full title text for Title 1 here..."
+    },
+    {
+      "title_id": 2,
+      "title_text": "Full title text for Title 2 here..."
+    },
+    {
+      "title_id": 3,
+      "title_text": "Full title text for Title 3 here..."
+    }
+  ]
+}Do not include any additional text, explanations, or markdown outside the JSON.
+
+
+  
+  
+  `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
   const lines = response.split('\n').filter(line => line.trim());
@@ -126,7 +174,31 @@ export const generateTitles = async (topic: string, angle: string, hook: string,
 };
 
 export const generateThumbnailPrompts = async (title: string, hook: string, customSettings?: string): Promise<string[]> => {
-  const prompt = `From the title '${title}' and hook '${hook}', generate 3 detailed DALL-E/Midjourney-style prompts for YouTube thumbnails. Each should be visually striking, high-contrast, with text overlay ideas, optimized for 1280x720. Format as numbered list.`;
+  const prompt = `From the title '${title}' and hook '${hook}', generate 3 detailed DALL-E/Midjourney-style prompts for YouTube thumbnails. Each should be visually striking, high-contrast, with text overlay ideas, optimized for 1280x720. Format as numbered list.
+  
+  
+  Respond ONLY with a valid JSON object in this exact structure:
+{
+  "thumbnail_prompts": [
+    {
+      "prompt_id": 1,
+      "prompt_text": "Detailed prompt for Thumbnail 1 here..."
+    },
+    {
+      "prompt_id": 2,
+      "prompt_text": "Detailed prompt for Thumbnail 2 here..."
+    },
+    {
+      "prompt_id": 3,
+      "prompt_text": "Detailed prompt for Thumbnail 3 here..."
+    }
+  ]
+}Do not include any additional text, explanations, or markdown outside the JSON.
+
+
+  
+  
+  `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
   const lines = response.split('\n').filter(line => line.trim());
@@ -134,7 +206,7 @@ export const generateThumbnailPrompts = async (title: string, hook: string, cust
 };
 
 export const generateScript = async (title: string, hook: string, customSettings?: string): Promise<string> => {
-  const prompt = `From the title '${title}', hook '${hook}', and overall topic/angle, generate a complete YouTube video script for 8-15 minutes. Structure: Intro (hook), Body (3-5 sections with key points/transitions), Outro (CTA). Include timestamps, speaking notes, and visual cues. Word count ~1200-2200.`;
+  const prompt = `From the title '${title}', hook '${hook}', and overall topic/angle, generate a complete YouTube video script for 8-15 minutes. Structure: Intro (hook), Body (3-5 sections with key points/transitions), Outro (CTA). Word count ~1200-2200. Output the entire script as pure plain text only, with no markdown, code blocks, bullet points, or any other formatting—just continuous readable text with natural paragraphs and line breaks for sections.`;
   return generateWithDeepseek(prompt, customSettings);
 };
 
