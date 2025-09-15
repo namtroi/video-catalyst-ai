@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { aiService, AIModel } from '@/services/aiService';
-import { ThumbnailOption } from '@/types';
+import { ThumbnailOption, ImageModel } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
 import { Sparkles, Image, Loader2, Download, Eye } from 'lucide-react';
 
@@ -39,6 +39,7 @@ export const ThumbnailStep = ({
   const [prompts, setPrompts] = useState<ThumbnailOption[]>([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageQuality, setImageQuality] = useState<'standard' | '4k'>('standard');
+  const [imageModel, setImageModel] = useState<ImageModel>('seedream-4');
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
 
@@ -81,7 +82,8 @@ export const ThumbnailStep = ({
       const { data, error } = await supabase.functions.invoke('generate-images', {
         body: { 
           prompts: promptTexts,
-          quality: imageQuality
+          quality: imageQuality,
+          model: imageModel
         }
       });
 
@@ -93,7 +95,8 @@ export const ThumbnailStep = ({
           return {
             ...prompt,
             imageUrl: imageResult?.imageUrl || undefined,
-            imageQuality: imageQuality
+            imageQuality: imageQuality,
+            imageModel: imageModel
           };
         });
         
@@ -152,6 +155,12 @@ export const ThumbnailStep = ({
     return quality === '4k' 
       ? { label: '4K High Quality', size: '2560×1440', cost: 'Higher cost' }
       : { label: 'YouTube Standard', size: '1280×720', cost: 'Lower cost' };
+  };
+
+  const getModelInfo = (model: ImageModel) => {
+    return model === 'flux-1.1-pro-ultra'
+      ? { label: 'Flux Pro Ultra', description: 'Better 16:9 thumbnails, professional quality' }
+      : { label: 'Seedream 4', description: 'Fast generation, good for testing' };
   };
 
   return (
@@ -273,14 +282,23 @@ export const ThumbnailStep = ({
                                     </Button>
                                   </div>
                                 </div>
-                                {promptOption.imageQuality && (
-                                  <Badge 
-                                    variant={promptOption.imageQuality === '4k' ? 'default' : 'secondary'}
-                                    className="absolute top-2 right-2"
-                                  >
-                                    {promptOption.imageQuality === '4k' ? '4K' : 'YouTube'}
-                                  </Badge>
-                                )}
+                                 <div className="absolute top-2 right-2 flex gap-1">
+                                   {promptOption.imageQuality && (
+                                     <Badge 
+                                       variant={promptOption.imageQuality === '4k' ? 'default' : 'secondary'}
+                                     >
+                                       {promptOption.imageQuality === '4k' ? '4K' : 'YouTube'}
+                                     </Badge>
+                                   )}
+                                   {promptOption.imageModel && (
+                                     <Badge 
+                                       variant="outline"
+                                       className="text-xs"
+                                     >
+                                       {promptOption.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
+                                     </Badge>
+                                   )}
+                                 </div>
                               </div>
                             ) : (
                               <div className="flex items-center justify-center h-full bg-muted rounded-lg border-2 border-dashed">
@@ -320,35 +338,61 @@ export const ThumbnailStep = ({
             <div className="space-y-3">
               <h3 className="text-lg font-semibold text-foreground">Generate Thumbnail Images</h3>
               
-              <div className="space-y-2">
-                <Label className="text-sm font-medium text-foreground">
-                  Image Quality
-                </Label>
-                <Select value={imageQuality} onValueChange={(value: 'standard' | '4k') => setImageQuality(value)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select quality" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="standard">
-                      <div className="flex items-center justify-between w-full">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-foreground">
+                    Image Model
+                  </Label>
+                  <Select value={imageModel} onValueChange={(value: ImageModel) => setImageModel(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="seedream-4">
                         <div>
-                          <div className="font-medium">YouTube Standard</div>
-                          <div className="text-xs text-muted-foreground">1280×720 • Lower cost • Faster</div>
+                          <div className="font-medium">Seedream 4</div>
+                          <div className="text-xs text-muted-foreground">Fast generation • Good for testing</div>
                         </div>
-                      </div>
-                    </SelectItem>
-                    <SelectItem value="4k">
-                      <div className="flex items-center justify-between w-full">
+                      </SelectItem>
+                      <SelectItem value="flux-1.1-pro-ultra">
                         <div>
-                          <div className="font-medium">4K High Quality</div>
-                          <div className="text-xs text-muted-foreground">2560×1440 • Higher cost • Best quality</div>
+                          <div className="font-medium">Flux Pro Ultra</div>
+                          <div className="text-xs text-muted-foreground">16:9 thumbnails • Professional quality</div>
                         </div>
-                      </div>
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-                <div className="text-sm text-muted-foreground">
-                  {getQualityInfo(imageQuality).label} - {getQualityInfo(imageQuality).cost}
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="text-sm text-muted-foreground">
+                    {getModelInfo(imageModel).description}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium text-foreground">
+                    Image Quality
+                  </Label>
+                  <Select value={imageQuality} onValueChange={(value: 'standard' | '4k') => setImageQuality(value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select quality" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="standard">
+                        <div>
+                          <div className="font-medium">Standard</div>
+                          <div className="text-xs text-muted-foreground">Lower cost • Faster generation</div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="4k">
+                        <div>
+                          <div className="font-medium">High Quality</div>
+                          <div className="text-xs text-muted-foreground">Higher cost • Best quality</div>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="text-sm text-muted-foreground">
+                    {getQualityInfo(imageQuality).cost}
+                  </div>
                 </div>
               </div>
             </div>

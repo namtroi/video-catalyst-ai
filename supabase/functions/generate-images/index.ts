@@ -8,6 +8,7 @@ const corsHeaders = {
 interface ImageGenerationRequest {
   prompts: string[];
   quality: 'standard' | '4k';
+  model: 'seedream-4' | 'flux-1.1-pro-ultra';
 }
 
 // Segmind API returns binary image data directly
@@ -24,7 +25,7 @@ serve(async (req) => {
       throw new Error('SEGMIND_API_KEY is not set');
     }
 
-    const { prompts, quality }: ImageGenerationRequest = await req.json();
+    const { prompts, quality, model = 'seedream-4' }: ImageGenerationRequest = await req.json();
 
     if (!prompts || !Array.isArray(prompts) || prompts.length === 0) {
       return new Response(
@@ -33,19 +34,38 @@ serve(async (req) => {
       );
     }
 
-    console.log(`Generating ${prompts.length} images with ${quality} quality`);
+    console.log(`Generating ${prompts.length} images with ${quality} quality using ${model} model`);
 
-    // Configure parameters based on quality for YouTube thumbnails (16:9 aspect ratio)
-    const imageConfig = quality === '4k' 
-      ? { width: 2560, height: 1440, steps: 20 }
-      : { width: 1280, height: 720, steps: 6 };
+    // Configure parameters based on model and quality
+    const getModelConfig = (model: string, quality: string) => {
+      if (model === 'flux-1.1-pro-ultra') {
+        return {
+          endpoint: 'https://api.segmind.com/v1/flux-1.1-pro-ultra',
+          steps: quality === '4k' ? 25 : 12,
+          params: {
+            aspect_ratio: '16:9',
+            raw: false
+          }
+        };
+      } else {
+        return {
+          endpoint: 'https://api.segmind.com/v1/seedream-4',
+          steps: quality === '4k' ? 20 : 6,
+          params: {
+            aspect_ratio: '16:9'
+          }
+        };
+      }
+    };
+
+    const modelConfig = getModelConfig(model, quality);
 
     // Generate images for all prompts
     const imagePromises = prompts.map(async (prompt, index) => {
       console.log(`Generating image ${index + 1}/${prompts.length}: ${prompt.substring(0, 50)}...`);
       
       try {
-        const response = await fetch('https://api.segmind.com/v1/seedream-4', {
+        const response = await fetch(modelConfig.endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -53,9 +73,9 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             prompt: prompt,
-            aspect_ratio: '16:9',
-            steps: imageConfig.steps,
-            seed: Math.floor(Math.random() * 2147483647)
+            steps: modelConfig.steps,
+            seed: Math.floor(Math.random() * 2147483647),
+            ...modelConfig.params
           }),
         });
 
@@ -84,6 +104,7 @@ serve(async (req) => {
           promptId: `prompt-${index}`,
           imageUrl: `data:image/jpeg;base64,${base64Data}`,
           quality: quality,
+          model: model,
           seed: Math.floor(Math.random() * 2147483647)
         };
       } catch (error) {
@@ -92,6 +113,7 @@ serve(async (req) => {
           promptId: `prompt-${index}`,
           imageUrl: null,
           quality: quality,
+          model: model,
           error: error.message
         };
       }
@@ -106,6 +128,7 @@ serve(async (req) => {
         success: true, 
         images: results,
         quality: quality,
+        model: model,
         totalGenerated: results.filter(r => r.imageUrl).length
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

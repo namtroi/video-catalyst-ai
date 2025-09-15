@@ -57,12 +57,16 @@ export interface ThumbnailOption {
   text: string;
   imageUrl?: string;
   imageQuality?: 'standard' | '4k';
+  imageModel?: ImageModel;
 }
 
 export interface ImageGenerationRequest {
   prompts: string[];
   quality: 'standard' | '4k';
+  model: 'seedream-4' | 'flux-1.1-pro-ultra';
 }
+
+export type ImageModel = 'seedream-4' | 'flux-1.1-pro-ultra';
 
 export interface GeneratedImage {
   promptId: string;
