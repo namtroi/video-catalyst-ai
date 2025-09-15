@@ -43,6 +43,7 @@ export type Database = {
           angle: string | null
           angle_settings: string | null
           created_at: string
+          generated_thumbnails: string | null
           hook: string | null
           hook_settings: string | null
           id: string
@@ -51,6 +52,7 @@ export type Database = {
           project_name: string
           script: string | null
           script_settings: string | null
+          selected_thumbnail_id: string | null
           thumbnail_prompt: string | null
           thumbnail_settings: string | null
           title: string | null
@@ -64,6 +66,7 @@ export type Database = {
           angle?: string | null
           angle_settings?: string | null
           created_at?: string
+          generated_thumbnails?: string | null
           hook?: string | null
           hook_settings?: string | null
           id?: string
@@ -72,6 +75,7 @@ export type Database = {
           project_name: string
           script?: string | null
           script_settings?: string | null
+          selected_thumbnail_id?: string | null
           thumbnail_prompt?: string | null
           thumbnail_settings?: string | null
           title?: string | null
@@ -85,6 +89,7 @@ export type Database = {
           angle?: string | null
           angle_settings?: string | null
           created_at?: string
+          generated_thumbnails?: string | null
           hook?: string | null
           hook_settings?: string | null
           id?: string
@@ -93,6 +98,7 @@ export type Database = {
           project_name?: string
           script?: string | null
           script_settings?: string | null
+          selected_thumbnail_id?: string | null
           thumbnail_prompt?: string | null
           thumbnail_settings?: string | null
           title?: string | null
