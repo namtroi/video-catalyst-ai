@@ -4,7 +4,7 @@ import { useProjectStore } from '@/hooks/useProjectStore';
 import { useAuth } from '@/hooks/useAuth';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { MainContent } from '@/components/layout/MainContent';
-import { SettingsPanel } from '@/components/layout/SettingsPanel';
+
 import { SettingsModal } from '@/components/SettingsModal';
 import { TopicStep } from '@/components/steps/TopicStep';
 import { AngleStep } from '@/components/steps/AngleStep';
@@ -107,30 +107,6 @@ export default function Index() {
     });
   };
 
-  const getCustomSettings = (step: number) => {
-    switch (step) {
-      case 1: return project.topicSettings || '';
-      case 2: return project.angleSettings || '';
-      case 3: return project.hookSettings || '';
-      case 4: return project.titleSettings || '';
-      case 5: return project.thumbnailSettings || '';
-      case 6: return project.scriptSettings || '';
-      case 7: return project.productionSettings || '';
-      default: return '';
-    }
-  };
-
-  const handleSettingsChange = (step: number, settings: string) => {
-    switch (step) {
-      case 1: updateProject({ topicSettings: settings }); break;
-      case 2: updateProject({ angleSettings: settings }); break;
-      case 3: updateProject({ hookSettings: settings }); break;
-      case 4: updateProject({ titleSettings: settings }); break;
-      case 5: updateProject({ thumbnailSettings: settings }); break;
-      case 6: updateProject({ scriptSettings: settings }); break;
-      case 7: updateProject({ productionSettings: settings }); break;
-    }
-  };
 
   const steps = [
     { 
@@ -351,23 +327,16 @@ export default function Index() {
           </div>
         </div>
 
-        <div className="flex flex-1">
-          <MainContent
-            currentStep={project.currentStep}
-            totalSteps={totalSteps}
-            canGoNext={project.currentStep < totalSteps && isStepValid(project.currentStep)}
-            canGoPrev={project.currentStep > 1}
-            onNext={handleNext}
-            onPrev={handlePrev}
-          >
-            {renderCurrentStep()}
-          </MainContent>
-          
-          <SettingsPanel
-            customSettings={getCustomSettings(project.currentStep)}
-            onSettingsChange={(settings) => handleSettingsChange(project.currentStep, settings)}
-          />
-        </div>
+        <MainContent
+          currentStep={project.currentStep}
+          totalSteps={totalSteps}
+          canGoNext={project.currentStep < totalSteps && isStepValid(project.currentStep)}
+          canGoPrev={project.currentStep > 1}
+          onNext={handleNext}
+          onPrev={handlePrev}
+        >
+          {renderCurrentStep()}
+        </MainContent>
       </div>
 
       <SettingsModal 
