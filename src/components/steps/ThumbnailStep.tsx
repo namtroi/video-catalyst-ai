@@ -132,7 +132,20 @@ export const ThumbnailStep = ({
   };
 
   const viewImageFullSize = (imageUrl: string) => {
-    window.open(imageUrl, '_blank');
+    // Convert data URL to blob for better browser handling
+    fetch(imageUrl)
+      .then(res => res.blob())
+      .then(blob => {
+        const objectUrl = URL.createObjectURL(blob);
+        const newWindow = window.open(objectUrl, '_blank');
+        // Clean up the object URL after a delay
+        setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      })
+      .catch(error => {
+        console.error('Failed to open image:', error);
+        // Fallback: try direct data URL
+        window.open(imageUrl, '_blank');
+      });
   };
 
   const getQualityInfo = (quality: 'standard' | '4k') => {

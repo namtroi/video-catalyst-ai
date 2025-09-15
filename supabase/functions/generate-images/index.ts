@@ -53,8 +53,7 @@ serve(async (req) => {
           },
           body: JSON.stringify({
             prompt: prompt,
-            width: imageConfig.width,
-            height: imageConfig.height,
+            aspect_ratio: '16:9',
             steps: imageConfig.steps,
             seed: Math.floor(Math.random() * 2147483647)
           }),
