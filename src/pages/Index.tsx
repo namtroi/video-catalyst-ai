@@ -32,7 +32,7 @@ interface StepData {
 export default function Index() {
   const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const { project, updateProject, completeStep, resetProject } = useProjectStore();
+  const { project, updateProject, completeStep, resetProject, selectedTemplate, applyTemplate } = useProjectStore();
   const [showSummary, setShowSummary] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [userSettings, setUserSettings] = useState<{selected_model: AIModel} | null>(null);
@@ -210,6 +210,9 @@ export default function Index() {
             topicSettings={project.topicSettings}
             onTopicSettingsChange={(topicSettings) => updateProject({ topicSettings })}
             selectedModel={selectedModel}
+            selectedTemplate={selectedTemplate}
+            onTemplateSelect={applyTemplate}
+            currentStep={project.currentStep}
           />
         );
       case 2:

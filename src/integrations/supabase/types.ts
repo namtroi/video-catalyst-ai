@@ -68,6 +68,51 @@ export type Database = {
         }
         Relationships: []
       }
+      user_templates: {
+        Row: {
+          angle_settings: string | null
+          created_at: string
+          hook_settings: string | null
+          id: string
+          name: string
+          production_settings: string | null
+          script_settings: string | null
+          thumbnail_settings: string | null
+          title_settings: string | null
+          topic_settings: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          angle_settings?: string | null
+          created_at?: string
+          hook_settings?: string | null
+          id?: string
+          name: string
+          production_settings?: string | null
+          script_settings?: string | null
+          thumbnail_settings?: string | null
+          title_settings?: string | null
+          topic_settings?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          angle_settings?: string | null
+          created_at?: string
+          hook_settings?: string | null
+          id?: string
+          name?: string
+          production_settings?: string | null
+          script_settings?: string | null
+          thumbnail_settings?: string | null
+          title_settings?: string | null
+          topic_settings?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

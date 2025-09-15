@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { VideoProject } from '@/types';
+import { VideoProject, Template } from '@/types';
 
 const STORAGE_KEY = 'youtube-pipeline-project';
 
@@ -23,6 +23,8 @@ export const useProjectStore = () => {
       updatedAt: new Date(),
     };
   });
+
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
   useEffect(() => {
     const toSave = {
@@ -71,6 +73,22 @@ export const useProjectStore = () => {
       updatedAt: new Date(),
     };
     setProject(newProject);
+    setSelectedTemplate(null);
+  };
+
+  const applyTemplate = (template: Template | null) => {
+    setSelectedTemplate(template);
+    if (template) {
+      updateProject({
+        topicSettings: template.topic_settings,
+        angleSettings: template.angle_settings,
+        hookSettings: template.hook_settings,
+        titleSettings: template.title_settings,
+        thumbnailSettings: template.thumbnail_settings,
+        scriptSettings: template.script_settings,
+        productionSettings: template.production_settings,
+      });
+    }
   };
 
   return {
@@ -79,5 +97,7 @@ export const useProjectStore = () => {
     completeStep,
     goToStep,
     resetProject,
+    selectedTemplate,
+    applyTemplate,
   };
 };

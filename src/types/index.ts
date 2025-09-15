@@ -72,3 +72,18 @@ export interface AIGenerationResponse {
   data?: string | GenerationOption[];
   error?: string;
 }
+
+export interface Template {
+  id: string;
+  user_id: string;
+  name: string;
+  topic_settings: string;
+  angle_settings: string;
+  hook_settings: string;
+  title_settings: string;
+  thumbnail_settings: string;
+  script_settings: string;
+  production_settings: string;
+  created_at: Date;
+  updated_at: Date;
+}
