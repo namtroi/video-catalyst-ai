@@ -113,7 +113,7 @@ async function generateWithDeepseek(type: string, apiKey: string, customSettings
 
   // Use custom settings as full prompt if provided, otherwise use default prompts
   if (customSettings && customSettings.trim()) {
-    prompt = customSettings;
+    prompt = replaceVariables(customSettings, { topic, angle, hook, title, script });
   }
 
   const response = await fetch('https://api.deepseek.com/chat/completions', {
@@ -174,7 +174,7 @@ async function generateWithOpenAI(type: string, modelName: string, apiKey: strin
 
   // Use custom settings as full prompt if provided, otherwise use default prompts
   if (customSettings && customSettings.trim()) {
-    prompt = customSettings;
+    prompt = replaceVariables(customSettings, { topic, angle, hook, title, script });
   }
 
   // Build request body based on model
@@ -215,6 +215,19 @@ async function generateWithOpenAI(type: string, modelName: string, apiKey: strin
 
 // Import prompts from centralized repository
 import { getDeepseekPrompts, getOpenAIPrompts } from './prompts.ts';
+
+function replaceVariables(text: string, variables: { topic?: string, angle?: string, hook?: string, title?: string, script?: string }): string {
+  let result = text;
+  
+  // Replace variables with actual values or keep placeholders if not available
+  result = result.replace(/{topic}/g, variables.topic || '{topic}');
+  result = result.replace(/{angle}/g, variables.angle || '{angle}');
+  result = result.replace(/{hook}/g, variables.hook || '{hook}');
+  result = result.replace(/{title}/g, variables.title || '{title}');
+  result = result.replace(/{script}/g, variables.script || '{script}');
+  
+  return result;
+}
 
 function parseResponse(type: string, content: string) {
   if (type === 'topic' || type === 'script') {
