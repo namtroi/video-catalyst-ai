@@ -211,10 +211,11 @@ export const generateScript = async (title: string, hook: string, customSettings
 };
 
 export const generateImageVideoPrompts = async (script: string, customSettings?: string): Promise<string> => {
-  const prompt = `From the full script '${script}', break it into 10-20 scene segments. For each: Generate a detailed image prompt (DALL-E style for static visuals) and a Veo 3 video prompt (for animating the image into 5-10 second clips). Ensure consistency in style/theme. Respond ONLY with a valid JSON object like this example structure:
+  const prompt = `From the full script '${script}', break it into 10-20 scene segments. For each: Generate a detailed image prompt (DALL-E style for static visuals) and a Veo 3 video prompt (for animating the image into 5-10 second clips). Ensure consistency in style/theme.
   
+  Respond ONLY with a valid JSON object like this structure:
   
- {
+  {
   "scenes": [
     {
       "scene_number": 1,
@@ -234,7 +235,9 @@ export const generateImageVideoPrompts = async (script: string, customSettings?:
   ]
 }
 
- 
+
+  Do not include any additional text, explanations, or markdown outside the JSON.
+  
   
   
   
