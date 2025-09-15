@@ -47,7 +47,7 @@ export const generateWithDeepseek = async (prompt: string, customSettings?: stri
 };
 
 export const generateTopic = async (customSettings?: string): Promise<string> => {
-  const prompt = "Generate a single engaging YouTube video topic suitable for 8-15 minutes. Make it trending or evergreen.";
+  const prompt = "Generate one engaging YouTube video topic for an 8-15 minute video, trending or evergreen. Output only the topic text.";
   return generateWithDeepseek(prompt, customSettings);
 };
 
