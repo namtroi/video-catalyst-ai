@@ -22,6 +22,10 @@ interface ThumbnailStepProps {
   thumbnailSettings?: string;
   onThumbnailSettingsChange: (settings: string) => void;
   selectedModel: AIModel;
+  generatedThumbnails?: ThumbnailOption[];
+  selectedThumbnailId?: string;
+  onGeneratedThumbnailsChange?: (thumbnails: ThumbnailOption[]) => void;
+  onSelectedThumbnailChange?: (thumbnailId: string | null) => void;
 }
 
 export const ThumbnailStep = ({ 
@@ -33,15 +37,26 @@ export const ThumbnailStep = ({
   onThumbnailPromptChange,
   thumbnailSettings,
   onThumbnailSettingsChange,
-  selectedModel
+  selectedModel,
+  generatedThumbnails,
+  selectedThumbnailId,
+  onGeneratedThumbnailsChange,
+  onSelectedThumbnailChange
 }: ThumbnailStepProps) => {
   const [selectedPrompt, setSelectedPrompt] = useState(thumbnailPrompt || '');
-  const [prompts, setPrompts] = useState<ThumbnailOption[]>([]);
+  const [prompts, setPrompts] = useState<ThumbnailOption[]>(generatedThumbnails || []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageQuality, setImageQuality] = useState<'standard' | '4k'>('standard');
   const [imageModel, setImageModel] = useState<ImageModel>('seedream-4');
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
+
+  // Restore generated images from project data when component mounts
+  useEffect(() => {
+    if (generatedThumbnails && generatedThumbnails.length > 0) {
+      setPrompts(generatedThumbnails);
+    }
+  }, [generatedThumbnails]);
 
   const generatePromptsFromAI = async () => {
     if (!title || !hook) return;
@@ -61,6 +76,12 @@ export const ThumbnailStep = ({
   const handleSelectPrompt = (selectedPrompt: string) => {
     setSelectedPrompt(selectedPrompt);
     onThumbnailPromptChange(selectedPrompt);
+    
+    // Find the selected thumbnail and save its ID
+    const selectedOption = prompts.find(p => p.text === selectedPrompt);
+    if (selectedOption && onSelectedThumbnailChange) {
+      onSelectedThumbnailChange(selectedOption.id);
+    }
   };
 
   const generateImages = async () => {
@@ -101,6 +122,11 @@ export const ThumbnailStep = ({
         });
         
         setPrompts(updatedPrompts);
+        
+        // Save generated images to project data
+        if (onGeneratedThumbnailsChange) {
+          onGeneratedThumbnailsChange(updatedPrompts);
+        }
         
         const successCount = data.images.filter((img: any) => img.imageUrl).length;
         toast.success(`Generated ${successCount}/${prompts.length} thumbnail images successfully!`);

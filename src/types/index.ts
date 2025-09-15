@@ -7,6 +7,9 @@ export interface VideoProject {
   thumbnailPrompt?: string;
   script?: string;
   imageVideoPrompts?: string;
+  // Generated thumbnail data
+  generatedThumbnails?: ThumbnailOption[];
+  selectedThumbnailId?: string;
   // Step-specific custom settings
   topicSettings?: string;
   angleSettings?: string;

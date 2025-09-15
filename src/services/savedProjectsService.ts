@@ -12,6 +12,10 @@ export interface SavedProject {
   thumbnail_prompt?: string;
   script?: string;
   image_video_prompts?: string;
+  // Generated thumbnail data
+  generated_thumbnails?: string; // JSON string of ThumbnailOption[]
+  selected_thumbnail_id?: string;
+  // Settings
   topic_settings?: string;
   angle_settings?: string;
   hook_settings?: string;
@@ -50,6 +54,8 @@ export class SavedProjectsService {
         thumbnail_prompt: project.thumbnailPrompt,
         script: project.script,
         image_video_prompts: project.imageVideoPrompts,
+        generated_thumbnails: project.generatedThumbnails ? JSON.stringify(project.generatedThumbnails) : undefined,
+        selected_thumbnail_id: project.selectedThumbnailId,
         topic_settings: project.topicSettings,
         angle_settings: project.angleSettings,
         hook_settings: project.hookSettings,
@@ -77,6 +83,8 @@ export class SavedProjectsService {
         thumbnail_prompt: project.thumbnailPrompt,
         script: project.script,
         image_video_prompts: project.imageVideoPrompts,
+        generated_thumbnails: project.generatedThumbnails ? JSON.stringify(project.generatedThumbnails) : undefined,
+        selected_thumbnail_id: project.selectedThumbnailId,
         topic_settings: project.topicSettings,
         angle_settings: project.angleSettings,
         hook_settings: project.hookSettings,
@@ -103,6 +111,15 @@ export class SavedProjectsService {
   }
 
   static convertSavedProjectToVideoProject(savedProject: SavedProject): VideoProject {
+    let generatedThumbnails = undefined;
+    if (savedProject.generated_thumbnails) {
+      try {
+        generatedThumbnails = JSON.parse(savedProject.generated_thumbnails);
+      } catch (error) {
+        console.error('Failed to parse generated thumbnails:', error);
+      }
+    }
+
     return {
       id: crypto.randomUUID(), // Generate new ID for working project
       topic: savedProject.topic,
@@ -112,6 +129,8 @@ export class SavedProjectsService {
       thumbnailPrompt: savedProject.thumbnail_prompt,
       script: savedProject.script,
       imageVideoPrompts: savedProject.image_video_prompts,
+      generatedThumbnails,
+      selectedThumbnailId: savedProject.selected_thumbnail_id,
       topicSettings: savedProject.topic_settings,
       angleSettings: savedProject.angle_settings,
       hookSettings: savedProject.hook_settings,

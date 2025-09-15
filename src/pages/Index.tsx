@@ -273,6 +273,10 @@ export default function Index() {
             thumbnailSettings={project.thumbnailSettings}
             onThumbnailSettingsChange={(thumbnailSettings) => updateProject({ thumbnailSettings })}
             selectedModel={selectedModel}
+            generatedThumbnails={project.generatedThumbnails}
+            selectedThumbnailId={project.selectedThumbnailId}
+            onGeneratedThumbnailsChange={(thumbnails) => updateProject({ generatedThumbnails: thumbnails })}
+            onSelectedThumbnailChange={(thumbnailId) => updateProject({ selectedThumbnailId: thumbnailId })}
           />
         );
       case 6:

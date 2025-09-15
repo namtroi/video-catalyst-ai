@@ -112,6 +112,25 @@ export const ProjectSummary = ({
     if (project.script) zip.file("06-script.txt", project.script);
     if (project.imageVideoPrompts) zip.file("07-production-prompts.txt", project.imageVideoPrompts);
     
+    // Add thumbnail images
+    if (project.generatedThumbnails && project.generatedThumbnails.length > 0) {
+      for (let i = 0; i < project.generatedThumbnails.length; i++) {
+        const thumbnail = project.generatedThumbnails[i];
+        if (thumbnail.imageUrl) {
+          try {
+            const response = await fetch(thumbnail.imageUrl);
+            const blob = await response.blob();
+            const fileName = project.selectedThumbnailId === thumbnail.id 
+              ? "05-selected-thumbnail.jpg" 
+              : `05-thumbnail-option-${i + 1}.jpg`;
+            zip.file(fileName, blob);
+          } catch (error) {
+            console.error('Failed to add thumbnail image to zip:', error);
+          }
+        }
+      }
+    }
+    
     // Add settings files
     if (project.topicSettings) zip.file("settings/topic-settings.txt", project.topicSettings);
     if (project.angleSettings) zip.file("settings/angle-settings.txt", project.angleSettings);
@@ -474,34 +493,100 @@ export const ProjectSummary = ({
         </div>
 
         {/* Thumbnails Section */}
-        {project.thumbnailPrompt && (
+        {(project.thumbnailPrompt || (project.generatedThumbnails && project.generatedThumbnails.length > 0)) && (
           <section className="space-y-4">
             <h2 className="text-2xl font-bold text-foreground print:text-black flex items-center">
               <ImageIcon className="w-6 h-6 mr-2 text-primary print:text-black" />
               Thumbnail Options
             </h2>
             
-            <div className="grid sm:grid-cols-1 gap-4">
-              <Card className="shadow-md print:shadow-none print:border print:border-gray-300 border-2 border-success">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="w-full h-32 bg-muted rounded flex items-center justify-center print:bg-gray-100">
-                      <ImageIcon className="w-8 h-8 text-muted-foreground print:text-gray-400" />
-                    </div>
-                  </div>
-                  <p className="text-sm text-foreground mb-3 print:text-black">{project.thumbnailPrompt}</p>
-                  <Button
-                    onClick={() => copyToClipboard(project.thumbnailPrompt!, 'Thumbnail Prompt')}
-                    variant="outline"
-                    size="sm"
-                    className="w-full print:hidden"
+            {project.generatedThumbnails && project.generatedThumbnails.length > 0 ? (
+              <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
+                {project.generatedThumbnails.map((thumbnail) => (
+                  <Card 
+                    key={thumbnail.id} 
+                    className={`shadow-md print:shadow-none print:border print:border-gray-300 ${
+                      project.selectedThumbnailId === thumbnail.id ? 'border-2 border-success ring-2 ring-success/20' : 'border-2 border-muted'
+                    }`}
                   >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy Prompt
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start mb-3">
+                        {thumbnail.imageUrl ? (
+                          <div className="w-full relative group">
+                            <img 
+                              src={thumbnail.imageUrl}
+                              alt={thumbnail.text}
+                              className="w-full aspect-video object-cover rounded-lg border"
+                              loading="lazy"
+                            />
+                            {project.selectedThumbnailId === thumbnail.id && (
+                              <div className="absolute top-2 left-2">
+                                <Badge className="bg-success text-success-foreground">
+                                  Selected
+                                </Badge>
+                              </div>
+                            )}
+                            <div className="absolute top-2 right-2 flex gap-1">
+                              {thumbnail.imageQuality && (
+                                <Badge 
+                                  variant={thumbnail.imageQuality === '4k' ? 'default' : 'secondary'}
+                                >
+                                  {thumbnail.imageQuality === '4k' ? '4K' : 'YouTube'}
+                                </Badge>
+                              )}
+                              {thumbnail.imageModel && (
+                                <Badge 
+                                  variant="outline"
+                                  className="text-xs"
+                                >
+                                  {thumbnail.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="w-full h-32 bg-muted rounded flex items-center justify-center print:bg-gray-100">
+                            <ImageIcon className="w-8 h-8 text-muted-foreground print:text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <p className="text-sm text-foreground mb-3 print:text-black">{thumbnail.text}</p>
+                      <Button
+                        onClick={() => copyToClipboard(thumbnail.text, 'Thumbnail Prompt')}
+                        variant="outline"
+                        size="sm"
+                        className="w-full print:hidden"
+                      >
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy Prompt
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            ) : project.thumbnailPrompt && (
+              <div className="grid sm:grid-cols-1 gap-4">
+                <Card className="shadow-md print:shadow-none print:border print:border-gray-300 border-2 border-muted">
+                  <CardContent className="p-4">
+                    <div className="flex justify-between items-start mb-3">
+                      <div className="w-full h-32 bg-muted rounded flex items-center justify-center print:bg-gray-100">
+                        <ImageIcon className="w-8 h-8 text-muted-foreground print:text-gray-400" />
+                      </div>
+                    </div>
+                    <p className="text-sm text-foreground mb-3 print:text-black">{project.thumbnailPrompt}</p>
+                    <Button
+                      onClick={() => copyToClipboard(project.thumbnailPrompt!, 'Thumbnail Prompt')}
+                      variant="outline"
+                      size="sm"
+                      className="w-full print:hidden"
+                    >
+                      <Copy className="w-4 h-4 mr-2" />
+                      Copy Prompt
+                    </Button>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
           </section>
         )}
 
