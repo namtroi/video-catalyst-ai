@@ -69,7 +69,14 @@ serve(async (req) => {
         // Get binary image data and convert to base64
         const arrayBuffer = await response.arrayBuffer();
         const uint8Array = new Uint8Array(arrayBuffer);
-        const binaryString = String.fromCharCode(...uint8Array);
+        
+        // Convert to base64 using chunked approach to avoid call stack overflow
+        let binaryString = '';
+        const chunkSize = 1024;
+        for (let i = 0; i < uint8Array.length; i += chunkSize) {
+          const chunk = uint8Array.slice(i, i + chunkSize);
+          binaryString += String.fromCharCode(...chunk);
+        }
         const base64Data = btoa(binaryString);
         
         console.log(`Successfully generated image ${index + 1}/${prompts.length}`);
