@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { generateScript } from '@/services/deepseekAI';
+import { Sparkles } from 'lucide-react';
 
 interface ScriptStepProps {
   title?: string;
@@ -94,9 +95,10 @@ export const ScriptStep = ({
         <Button
           onClick={generateScriptFromAI}
           disabled={isGenerating || !title || !hook}
-          variant="outline"
+          variant="default"
           className="w-full"
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           {isGenerating ? "Generating..." : "Generate Script"}
         </Button>
 

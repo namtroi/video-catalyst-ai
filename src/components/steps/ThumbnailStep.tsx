@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateThumbnailPrompts } from '@/services/deepseekAI';
 import { Textarea } from '@/components/ui/textarea';
+import { Sparkles } from 'lucide-react';
 
 interface ThumbnailOption {
   prompt_id: number;
@@ -124,9 +125,10 @@ export const ThumbnailStep = ({
         <Button
           onClick={generatePromptsFromAI}
           disabled={isGenerating || !title || !hook}
-          variant="outline"
+          variant="default"
           className="w-full"
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           {isGenerating ? "Generating..." : "Generate Thumbnail Prompts"}
         </Button>
 

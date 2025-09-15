@@ -5,6 +5,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateTitles } from '@/services/deepseekAI';
+import { Sparkles } from 'lucide-react';
 
 interface TitleOption {
   title_id: number;
@@ -133,9 +134,10 @@ export const TitleStep = ({
         <Button
           onClick={generateTitlesFromAI}
           disabled={isGenerating || !topic || !angle || !hook}
-          variant="outline"
+          variant="default"
           className="w-full"
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           {isGenerating ? "Generating..." : "Generate Titles"}
         </Button>
 

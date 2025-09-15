@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { toast } from 'sonner';
 import { generateImageVideoPrompts } from '@/services/deepseekAI';
 import { ScenesResponse } from '@/types';
+import { Sparkles } from 'lucide-react';
 
 interface ProductionStepProps {
   script?: string;
@@ -96,9 +97,10 @@ export const ProductionStep = ({
         <Button
           onClick={generatePromptsFromAI}
           disabled={isGenerating || !script}
-          variant="outline"
+          variant="default"
           className="w-full"
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           {isGenerating ? "Generating..." : "Generate Production Prompts"}
         </Button>
 

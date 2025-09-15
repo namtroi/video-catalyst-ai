@@ -4,6 +4,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { generateTopic } from '@/services/deepseekAI';
+import { Sparkles } from 'lucide-react';
 
 interface TopicStepProps {
   topic?: string;
@@ -72,9 +73,10 @@ export const TopicStep = ({
         <Button
           onClick={generateRandomTopic}
           disabled={isGenerating}
-          variant="outline"
+          variant="default"
           className="w-full"
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           {isGenerating ? "Generating..." : "Generate Random Topic"}
         </Button>
 

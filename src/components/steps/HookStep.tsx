@@ -6,6 +6,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
 import { generateHooks } from '@/services/deepseekAI';
+import { Sparkles } from 'lucide-react';
 
 interface HookOption {
   hook_id: number;
@@ -124,9 +125,10 @@ export const HookStep = ({
         <Button
           onClick={generateHooksFromAI}
           disabled={isGenerating || !topic || !angle}
-          variant="outline"
+          variant="default"
           className="w-full"
         >
+          <Sparkles className="w-4 h-4 mr-2" />
           {isGenerating ? "Generating..." : "Generate Hooks"}
         </Button>
 
