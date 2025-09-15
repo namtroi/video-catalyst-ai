@@ -50,18 +50,17 @@ serve(async (req) => {
       } else {
         // Seedream-4 configuration with custom dimensions for 16:9 YouTube thumbnails
         const dimensions = quality === '4k' 
-          ? { width: 1920, height: 1080 }
-          : { width: 1600, height: 900 };
+          ? { width: 1920, height: 1080, size: '1920x1080' }
+          : { width: 1600, height: 900, size: '1600x900' };
         
         return {
           endpoint: 'https://api.segmind.com/v1/seedream-4',
           steps: quality === '4k' ? 20 : 6,
           params: {
-            size: 'custom',
+            size: dimensions.size,
             width: dimensions.width,
             height: dimensions.height,
-            aspect_ratio: '16:9',
-            max_images: 1
+            aspect_ratio: '16:9'
           }
         };
       }
