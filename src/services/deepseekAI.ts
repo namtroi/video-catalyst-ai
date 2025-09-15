@@ -109,7 +109,16 @@ Do not include any additional text, explanations, or markdown outside the JSON.`
   }
 };
 
-export const generateHooks = async (topic: string, angle: string, customSettings?: string): Promise<string[]> => {
+interface HookOption {
+  hook_id: number;
+  hook_text: string;
+}
+
+interface HooksResponse {
+  hooks: HookOption[];
+}
+
+export const generateHooks = async (topic: string, angle: string, customSettings?: string): Promise<HookOption[]> => {
   const prompt = `From the topic '${topic}' and angle '${angle}', generate 3 compelling video hooks (first 30-60 seconds script snippets) to hook viewers immediately. Make them intriguing and story-driven. Format as numbered list.
 
    
@@ -137,11 +146,40 @@ Do not include any additional text, explanations, or markdown outside the JSON.
   `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
-  const lines = response.split('\n').filter(line => line.trim());
-  return lines.slice(0, 3).map(line => line.replace(/^\d+\.\s*/, '').trim());
+  try {
+    // Clean the response to extract JSON
+    const cleanedResponse = response.trim();
+    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? jsonMatch[0] : cleanedResponse;
+    
+    const parsedData: HooksResponse = JSON.parse(jsonString);
+    
+    if (!parsedData.hooks || !Array.isArray(parsedData.hooks)) {
+      throw new Error('Invalid hooks format in response');
+    }
+    
+    return parsedData.hooks.slice(0, 3);
+  } catch (error) {
+    console.error('Failed to parse hooks JSON:', error);
+    // Fallback to line parsing if JSON fails
+    const lines = response.split('\n').filter(line => line.trim());
+    return lines.slice(0, 3).map((line, index) => ({
+      hook_id: index + 1,
+      hook_text: line.replace(/^\d+\.\s*/, '').trim()
+    }));
+  }
 };
 
-export const generateTitles = async (topic: string, angle: string, hook: string, customSettings?: string): Promise<string[]> => {
+interface TitleOption {
+  title_id: number;
+  title_text: string;
+}
+
+interface TitlesResponse {
+  titles: TitleOption[];
+}
+
+export const generateTitles = async (topic: string, angle: string, hook: string, customSettings?: string): Promise<TitleOption[]> => {
   const prompt = `From the hook '${hook}' (and underlying topic/angle), generate 3 SEO-optimized YouTube titles that are clickbait-y yet honest, under 60 characters each. Aim for curiosity or benefit-driven. Format as numbered list.
   
   
@@ -169,11 +207,40 @@ export const generateTitles = async (topic: string, angle: string, hook: string,
   `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
-  const lines = response.split('\n').filter(line => line.trim());
-  return lines.slice(0, 3).map(line => line.replace(/^\d+\.\s*/, '').trim());
+  try {
+    // Clean the response to extract JSON
+    const cleanedResponse = response.trim();
+    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? jsonMatch[0] : cleanedResponse;
+    
+    const parsedData: TitlesResponse = JSON.parse(jsonString);
+    
+    if (!parsedData.titles || !Array.isArray(parsedData.titles)) {
+      throw new Error('Invalid titles format in response');
+    }
+    
+    return parsedData.titles.slice(0, 3);
+  } catch (error) {
+    console.error('Failed to parse titles JSON:', error);
+    // Fallback to line parsing if JSON fails
+    const lines = response.split('\n').filter(line => line.trim());
+    return lines.slice(0, 3).map((line, index) => ({
+      title_id: index + 1,
+      title_text: line.replace(/^\d+\.\s*/, '').trim()
+    }));
+  }
 };
 
-export const generateThumbnailPrompts = async (title: string, hook: string, customSettings?: string): Promise<string[]> => {
+interface ThumbnailOption {
+  prompt_id: number;
+  prompt_text: string;
+}
+
+interface ThumbnailPromptsResponse {
+  thumbnail_prompts: ThumbnailOption[];
+}
+
+export const generateThumbnailPrompts = async (title: string, hook: string, customSettings?: string): Promise<ThumbnailOption[]> => {
   const prompt = `From the title '${title}' and hook '${hook}', generate 3 detailed DALL-E/Midjourney-style prompts for YouTube thumbnails. Each should be visually striking, high-contrast, with text overlay ideas, optimized for 1280x720. Format as numbered list.
   
   
@@ -201,8 +268,28 @@ export const generateThumbnailPrompts = async (title: string, hook: string, cust
   `;
   const response = await generateWithDeepseek(prompt, customSettings);
   
-  const lines = response.split('\n').filter(line => line.trim());
-  return lines.slice(0, 3).map(line => line.replace(/^\d+\.\s*/, '').trim());
+  try {
+    // Clean the response to extract JSON
+    const cleanedResponse = response.trim();
+    const jsonMatch = cleanedResponse.match(/\{[\s\S]*\}/);
+    const jsonString = jsonMatch ? jsonMatch[0] : cleanedResponse;
+    
+    const parsedData: ThumbnailPromptsResponse = JSON.parse(jsonString);
+    
+    if (!parsedData.thumbnail_prompts || !Array.isArray(parsedData.thumbnail_prompts)) {
+      throw new Error('Invalid thumbnail prompts format in response');
+    }
+    
+    return parsedData.thumbnail_prompts.slice(0, 3);
+  } catch (error) {
+    console.error('Failed to parse thumbnail prompts JSON:', error);
+    // Fallback to line parsing if JSON fails
+    const lines = response.split('\n').filter(line => line.trim());
+    return lines.slice(0, 3).map((line, index) => ({
+      prompt_id: index + 1,
+      prompt_text: line.replace(/^\d+\.\s*/, '').trim()
+    }));
+  }
 };
 
 export const generateScript = async (title: string, hook: string, customSettings?: string): Promise<string> => {
