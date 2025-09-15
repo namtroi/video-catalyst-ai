@@ -7,8 +7,11 @@ import { aiService, AIModel } from '@/services/aiService';
 import { Sparkles } from 'lucide-react';
 
 interface ScriptStepProps {
-  title?: string;
+  topic?: string;
+  angle?: string;
   hook?: string;
+  title?: string;
+  thumbnailPrompt?: string;
   script?: string;
   onScriptChange: (script: string) => void;
   scriptSettings?: string;
@@ -17,8 +20,11 @@ interface ScriptStepProps {
 }
 
 export const ScriptStep = ({ 
+  topic,
+  angle,
+  hook,
   title, 
-  hook, 
+  thumbnailPrompt,
   script, 
   onScriptChange, 
   scriptSettings,
@@ -64,8 +70,15 @@ export const ScriptStep = ({
       <div className="space-y-3">
         <Card className="shadow-card">
           <CardContent className="p-4">
-            <h4 className="font-semibold text-foreground mb-2">Selected Title:</h4>
-            <p className="text-sm text-muted-foreground">{title}</p>
+            <h4 className="font-semibold text-foreground mb-2">Selected Topic:</h4>
+            <p className="text-sm text-muted-foreground">{topic}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Angle:</h4>
+            <p className="text-sm text-muted-foreground">{angle}</p>
           </CardContent>
         </Card>
 
@@ -73,6 +86,20 @@ export const ScriptStep = ({
           <CardContent className="p-4">
             <h4 className="font-semibold text-foreground mb-2">Selected Hook:</h4>
             <p className="text-sm text-muted-foreground">{hook}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Title:</h4>
+            <p className="text-sm text-muted-foreground">{title}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Thumbnail:</h4>
+            <p className="text-sm text-muted-foreground">{thumbnailPrompt}</p>
           </CardContent>
         </Card>
       </div>

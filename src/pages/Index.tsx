@@ -264,8 +264,10 @@ export default function Index() {
       case 5:
         return (
           <ThumbnailStep
-            title={project.title}
+            topic={project.topic}
+            angle={project.angle}
             hook={project.hook}
+            title={project.title}
             thumbnailPrompt={project.thumbnailPrompt}
             onThumbnailPromptChange={(prompt) => updateProject({ thumbnailPrompt: prompt })}
             thumbnailSettings={project.thumbnailSettings}
@@ -276,8 +278,11 @@ export default function Index() {
       case 6:
         return (
           <ScriptStep
-            title={project.title}
+            topic={project.topic}
+            angle={project.angle}
             hook={project.hook}
+            title={project.title}
+            thumbnailPrompt={project.thumbnailPrompt}
             script={project.script}
             onScriptChange={(script) => updateProject({ script })}
             scriptSettings={project.scriptSettings}
@@ -288,6 +293,11 @@ export default function Index() {
       case 7:
         return (
           <ProductionStep
+            topic={project.topic}
+            angle={project.angle}
+            hook={project.hook}
+            title={project.title}
+            thumbnailPrompt={project.thumbnailPrompt}
             script={project.script}
             imageVideoPrompts={project.imageVideoPrompts}
             onImageVideoPromptsChange={(prompts) => updateProject({ imageVideoPrompts: prompts })}

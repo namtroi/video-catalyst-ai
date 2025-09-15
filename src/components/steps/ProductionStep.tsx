@@ -8,6 +8,11 @@ import { ScenesResponse } from '@/types';
 import { Sparkles } from 'lucide-react';
 
 interface ProductionStepProps {
+  topic?: string;
+  angle?: string;
+  hook?: string;
+  title?: string;
+  thumbnailPrompt?: string;
   script?: string;
   imageVideoPrompts?: string;
   onImageVideoPromptsChange: (prompts: string) => void;
@@ -18,6 +23,11 @@ interface ProductionStepProps {
 }
 
 export const ProductionStep = ({ 
+  topic,
+  angle,
+  hook,
+  title,
+  thumbnailPrompt,
   script, 
   imageVideoPrompts, 
   onImageVideoPromptsChange, 
@@ -70,14 +80,51 @@ export const ProductionStep = ({
         </p>
       </div>
 
-      <Card className="shadow-card">
-        <CardContent className="p-4">
-          <h4 className="font-semibold text-foreground mb-2">Script Preview:</h4>
-          <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto border rounded p-2 bg-muted/50">
-            {script?.substring(0, 200)}...
-          </div>
-        </CardContent>
-      </Card>
+      <div className="space-y-3">
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Topic:</h4>
+            <p className="text-sm text-muted-foreground">{topic}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Angle:</h4>
+            <p className="text-sm text-muted-foreground">{angle}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Hook:</h4>
+            <p className="text-sm text-muted-foreground">{hook}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Title:</h4>
+            <p className="text-sm text-muted-foreground">{title}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Thumbnail:</h4>
+            <p className="text-sm text-muted-foreground">{thumbnailPrompt}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Script Preview:</h4>
+            <div className="text-sm text-muted-foreground max-h-32 overflow-y-auto border rounded p-2 bg-muted/50">
+              {script?.substring(0, 200)}...
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <div className="space-y-4">
         <div>

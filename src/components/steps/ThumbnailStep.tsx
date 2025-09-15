@@ -10,8 +10,10 @@ import { ThumbnailOption } from '@/types';
 import { Sparkles } from 'lucide-react';
 
 interface ThumbnailStepProps {
-  title?: string;
+  topic?: string;
+  angle?: string;
   hook?: string;
+  title?: string;
   thumbnailPrompt?: string;
   onThumbnailPromptChange: (prompt: string) => void;
   thumbnailSettings?: string;
@@ -20,8 +22,10 @@ interface ThumbnailStepProps {
 }
 
 export const ThumbnailStep = ({ 
+  topic,
+  angle,
+  hook,
   title, 
-  hook, 
   thumbnailPrompt,
   onThumbnailPromptChange,
   thumbnailSettings,
@@ -66,8 +70,15 @@ export const ThumbnailStep = ({
       <div className="space-y-3">
         <Card className="shadow-card">
           <CardContent className="p-4">
-            <h4 className="font-semibold text-foreground mb-2">Selected Title:</h4>
-            <p className="text-sm text-muted-foreground">{title}</p>
+            <h4 className="font-semibold text-foreground mb-2">Selected Topic:</h4>
+            <p className="text-sm text-muted-foreground">{topic}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Angle:</h4>
+            <p className="text-sm text-muted-foreground">{angle}</p>
           </CardContent>
         </Card>
 
@@ -75,6 +86,13 @@ export const ThumbnailStep = ({
           <CardContent className="p-4">
             <h4 className="font-semibold text-foreground mb-2">Selected Hook:</h4>
             <p className="text-sm text-muted-foreground">{hook}</p>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-card">
+          <CardContent className="p-4">
+            <h4 className="font-semibold text-foreground mb-2">Selected Title:</h4>
+            <p className="text-sm text-muted-foreground">{title}</p>
           </CardContent>
         </Card>
       </div>
