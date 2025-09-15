@@ -9,11 +9,13 @@ import { TitleStep } from '@/components/steps/TitleStep';
 import { ThumbnailStep } from '@/components/steps/ThumbnailStep';
 import { ScriptStep } from '@/components/steps/ScriptStep';
 import { ProductionStep } from '@/components/steps/ProductionStep';
+import { ProjectSummary } from '@/components/ProjectSummary';
 import { useProjectStore } from '@/hooks/useProjectStore';
 import { StepData } from '@/types';
 
 const Index = () => {
   const { project, updateProject, completeStep, goToStep } = useProjectStore();
+  const [showSummary, setShowSummary] = useState(false);
 
   const steps: StepData[] = [
     {
@@ -181,12 +183,23 @@ const Index = () => {
             onComplete={() => handleStepComplete(7)}
             isCompleted={project.completedSteps[6]}
             customSettings={project.customSettings}
+            onShowSummary={() => setShowSummary(true)}
           />
         );
       default:
         return null;
     }
   };
+
+  // Show project summary if triggered
+  if (showSummary) {
+    return (
+      <ProjectSummary
+        project={project}
+        onBackToSteps={() => setShowSummary(false)}
+      />
+    );
+  }
 
   return (
     <div className="h-screen bg-background flex">

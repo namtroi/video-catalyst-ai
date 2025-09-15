@@ -14,6 +14,7 @@ interface ProductionStepProps {
   onComplete: () => void;
   isCompleted: boolean;
   customSettings?: string;
+  onShowSummary?: () => void;
 }
 
 export const ProductionStep = ({ 
@@ -22,7 +23,8 @@ export const ProductionStep = ({
   onImageVideoPromptsChange, 
   onComplete, 
   isCompleted,
-  customSettings 
+  customSettings,
+  onShowSummary 
 }: ProductionStepProps) => {
   const [generatedPrompts, setGeneratedPrompts] = useState(imageVideoPrompts || '');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -52,6 +54,10 @@ export const ProductionStep = ({
     if (generatedPrompts) {
       onImageVideoPromptsChange(generatedPrompts);
       onComplete();
+      // Trigger summary view after a short delay
+      setTimeout(() => {
+        onShowSummary?.();
+      }, 500);
     }
   };
 
