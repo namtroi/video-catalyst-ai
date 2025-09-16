@@ -84,7 +84,24 @@ serve(async (req) => {
     if (!response.ok) {
       const errorText = await response.text();
       console.error(`Segmind API error:`, response.status, errorText);
-      throw new Error(`Segmind API error: ${response.status} ${errorText}`);
+      
+      // Parse specific API error messages
+      let enhancedError = `API error: ${response.status}`;
+      
+      if (errorText) {
+        const lowerErrorText = errorText.toLowerCase();
+        if (lowerErrorText.includes('content') && (lowerErrorText.includes('block') || lowerErrorText.includes('inappropriate'))) {
+          enhancedError = 'Content blocked by AI safety filters';
+        } else if (lowerErrorText.includes('rate') || lowerErrorText.includes('limit')) {
+          enhancedError = 'Rate limit exceeded';
+        } else if (lowerErrorText.includes('quota') || lowerErrorText.includes('credit')) {
+          enhancedError = 'API quota exceeded';
+        } else {
+          enhancedError = errorText;
+        }
+      }
+      
+      throw new Error(enhancedError);
     }
 
     // Get binary image data and convert to base64
@@ -118,10 +135,43 @@ serve(async (req) => {
 
   } catch (error) {
     console.error('Error in generate-single-image function:', error);
+    
+    // Parse and categorize different API error types
+    let errorMessage = 'An unexpected error occurred';
+    let errorType = 'unknown';
+    
+    if (error.message) {
+      const errorText = error.message.toLowerCase();
+      
+      if (errorText.includes('content') && (errorText.includes('block') || errorText.includes('sensitive') || errorText.includes('inappropriate'))) {
+        errorMessage = 'Content blocked: Prompt may contain sensitive or inappropriate content';
+        errorType = 'content_blocked';
+      } else if (errorText.includes('rate limit') || errorText.includes('too many requests')) {
+        errorMessage = 'Rate limit exceeded: Please wait before retrying';
+        errorType = 'rate_limit';
+      } else if (errorText.includes('timeout') || errorText.includes('time out')) {
+        errorMessage = 'Request timeout: Please try again';
+        errorType = 'timeout';
+      } else if (errorText.includes('quota') || errorText.includes('credits')) {
+        errorMessage = 'API quota exceeded: Service temporarily unavailable';
+        errorType = 'quota_exceeded';
+      } else if (errorText.includes('invalid') && errorText.includes('prompt')) {
+        errorMessage = 'Invalid prompt: Please try a different description';
+        errorType = 'invalid_prompt';
+      } else if (errorText.includes('api') && errorText.includes('error')) {
+        errorMessage = 'API service error: Please try again later';
+        errorType = 'api_error';
+      } else {
+        errorMessage = error.message;
+        errorType = 'unknown';
+      }
+    }
+    
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message || 'An unexpected error occurred',
+        error: errorMessage,
+        errorType: errorType,
         promptId: (await req.json().catch(() => ({})))?.promptId
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' }, status: 500 }

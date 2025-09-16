@@ -10,7 +10,7 @@ import { toast } from 'sonner';
 import { aiService, AIModel } from '@/services/aiService';
 import { ThumbnailOption, ImageModel } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
-import { Sparkles, Image, Loader2, Download, Eye } from 'lucide-react';
+import { Sparkles, Image, Loader2, Download, Eye, AlertCircle, RefreshCw } from 'lucide-react';
 
 interface ThumbnailStepProps {
   topic?: string;
@@ -44,7 +44,7 @@ export const ThumbnailStep = ({
   onSelectedThumbnailChange
 }: ThumbnailStepProps) => {
   const [selectedPrompt, setSelectedPrompt] = useState(thumbnailPrompt || '');
-  const [prompts, setPrompts] = useState<ThumbnailOption[]>(generatedThumbnails || []);
+  const [prompts, setPrompts] = useState<Array<ThumbnailOption & { hasError?: boolean; errorMessage?: string; errorType?: string }>>(generatedThumbnails || []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageQuality, setImageQuality] = useState<'standard' | '4k'>('standard');
   const [imageModel, setImageModel] = useState<ImageModel>('seedream-4');
@@ -121,7 +121,31 @@ export const ThumbnailStep = ({
             }
           });
 
-          if (error) throw error;
+          if (error) {
+            console.error(`Error generating image for prompt ${prompt.id}:`, error);
+            updatedPrompts[i] = {
+              ...updatedPrompts[i],
+              hasError: true,
+              errorMessage: error.message || 'Failed to generate image',
+              errorType: 'unknown'
+            };
+            setPrompts([...updatedPrompts]);
+            continue;
+          }
+
+          if (!data?.success) {
+            const errorMsg = data?.error || 'Failed to generate image';
+            const errorType = data?.errorType || 'unknown';
+            console.error(`Failed to generate image for prompt ${prompt.id}:`, errorMsg);
+            updatedPrompts[i] = {
+              ...updatedPrompts[i],
+              hasError: true,
+              errorMessage: errorMsg,
+              errorType: errorType
+            };
+            setPrompts([...updatedPrompts]);
+            continue;
+          }
 
           if (data?.success && data?.image) {
             // Update the specific prompt with the generated image
@@ -357,14 +381,95 @@ export const ThumbnailStep = ({
                                    )}
                                  </div>
                               </div>
-                            ) : (
-                              <div className="flex items-center justify-center h-full bg-muted rounded-lg border-2 border-dashed">
-                                <div className="text-center">
-                                  <Image className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
-                                  <div className="text-sm text-muted-foreground">No image yet</div>
-                                </div>
-                              </div>
-                            )}
+                             ) : promptOption.hasError ? (
+                               <div className="flex items-center justify-center h-full bg-destructive/5 rounded-lg border-2 border-dashed border-destructive/50">
+                                 <div className="text-center space-y-2 p-4">
+                                   <AlertCircle className="w-6 h-6 mx-auto text-destructive" />
+                                   <div className="text-sm font-medium text-destructive">Generation Failed</div>
+                                   <div className="text-xs text-destructive/80">
+                                     {promptOption.errorMessage || 'Unknown error occurred'}
+                                   </div>
+                                   <Button
+                                     size="sm"
+                                     variant="outline"
+                                     className="text-xs mt-2"
+                                     onClick={async (e) => {
+                                       e.stopPropagation();
+                                       // Retry single image generation
+                                       const updatedPrompts = [...prompts];
+                                       const promptIndex = prompts.findIndex(p => p.id === promptOption.id);
+                                       
+                                       updatedPrompts[promptIndex] = {
+                                         ...updatedPrompts[promptIndex],
+                                         hasError: false,
+                                         errorMessage: undefined
+                                       };
+                                       setPrompts(updatedPrompts);
+                                       setImageLoadingStates(prev => ({ ...prev, [promptOption.id]: true }));
+                                       
+                                       try {
+                                         const { data, error } = await supabase.functions.invoke('generate-single-image', {
+                                           body: {
+                                             prompt: promptOption.text,
+                                             quality: imageQuality,
+                                             model: imageModel,
+                                             promptId: promptOption.id
+                                           }
+                                         });
+
+                                         if (error || !data?.success) {
+                                           const errorMsg = error?.message || data?.error || 'Failed to generate image';
+                                           const errorType = data?.errorType || 'unknown';
+                                           updatedPrompts[promptIndex] = {
+                                             ...updatedPrompts[promptIndex],
+                                             hasError: true,
+                                             errorMessage: errorMsg,
+                                             errorType: errorType
+                                           };
+                                         } else {
+                                           updatedPrompts[promptIndex] = {
+                                             ...updatedPrompts[promptIndex],
+                                             imageUrl: data.image.imageUrl,
+                                             imageQuality: imageQuality,
+                                             imageModel: imageModel,
+                                             hasError: false
+                                           };
+                                         }
+                                         
+                                         setPrompts([...updatedPrompts]);
+                                         if (onGeneratedThumbnailsChange) {
+                                           onGeneratedThumbnailsChange([...updatedPrompts]);
+                                         }
+                                       } catch (retryError) {
+                                         console.error('Retry failed:', retryError);
+                                         updatedPrompts[promptIndex] = {
+                                           ...updatedPrompts[promptIndex],
+                                           hasError: true,
+                                           errorMessage: 'Retry failed'
+                                         };
+                                         setPrompts([...updatedPrompts]);
+                                       } finally {
+                                         setImageLoadingStates(prev => {
+                                           const newStates = { ...prev };
+                                           delete newStates[promptOption.id];
+                                           return newStates;
+                                         });
+                                       }
+                                     }}
+                                   >
+                                     <RefreshCw className="w-3 h-3 mr-1" />
+                                     Retry
+                                   </Button>
+                                 </div>
+                               </div>
+                             ) : (
+                               <div className="flex items-center justify-center h-full bg-muted rounded-lg border-2 border-dashed">
+                                 <div className="text-center">
+                                   <Image className="w-6 h-6 mx-auto mb-2 text-muted-foreground" />
+                                   <div className="text-sm text-muted-foreground">No image yet</div>
+                                 </div>
+                               </div>
+                             )}
                           </div>
                         </div>
                       </div>
