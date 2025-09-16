@@ -120,10 +120,27 @@ export default function Index() {
     setViewingSavedProject(null);
   };
 
-  const handleViewSavedProject = (savedProject: SavedProject) => {
-    setViewingSavedProject(savedProject);
-    setShowSavedProjects(false);
-    setShowSummary(true);
+  const handleViewSavedProject = async (savedProject: SavedProject) => {
+    try {
+      // Fetch full project data including images if not already present
+      let fullProject = savedProject;
+      if (!savedProject.generated_thumbnails && !savedProject.generated_production_images) {
+        const fetchedProject = await SavedProjectsService.getSavedProjectById(savedProject.id);
+        if (fetchedProject) {
+          fullProject = fetchedProject;
+        }
+      }
+      
+      setViewingSavedProject(fullProject);
+      setShowSavedProjects(false);
+      setShowSummary(true);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to load project details",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleBackFromSavedProject = () => {

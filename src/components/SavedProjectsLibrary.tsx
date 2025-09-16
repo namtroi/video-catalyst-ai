@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 interface SavedProjectsLibraryProps {
-  onViewProject: (project: SavedProject) => void;
+  onViewProject: (project: SavedProject) => Promise<void>;
   onBackToDashboard: () => void;
 }
 
@@ -32,6 +32,7 @@ export const SavedProjectsLibrary: React.FC<SavedProjectsLibraryProps> = ({
   const [filteredProjects, setFilteredProjects] = useState<SavedProject[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
+  const [loadingProjectId, setLoadingProjectId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -182,11 +183,28 @@ export const SavedProjectsLibrary: React.FC<SavedProjectsLibraryProps> = ({
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onViewProject(project)}
+                      onClick={async () => {
+                        setLoadingProjectId(project.id);
+                        try {
+                          await onViewProject(project);
+                        } finally {
+                          setLoadingProjectId(null);
+                        }
+                      }}
+                      disabled={loadingProjectId === project.id}
                       className="gap-2 flex-1 mr-2"
                     >
-                      <Eye className="h-4 w-4" />
-                      View Details
+                      {loadingProjectId === project.id ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          <Eye className="h-4 w-4" />
+                          View Details
+                        </>
+                      )}
                     </Button>
                     
                     <AlertDialog>

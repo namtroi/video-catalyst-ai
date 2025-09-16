@@ -31,13 +31,47 @@ export interface SavedProject {
 
 export class SavedProjectsService {
   static async getUserSavedProjects(): Promise<SavedProject[]> {
+    // Optimized query for list view - excludes large image columns
     const { data, error } = await supabase
       .from('saved_projects')
-      .select('*')
+      .select(`
+        id,
+        user_id,
+        project_name,
+        topic,
+        angle,
+        hook,
+        title,
+        thumbnail_prompt,
+        script,
+        image_video_prompts,
+        selected_thumbnail_id,
+        topic_settings,
+        angle_settings,
+        hook_settings,
+        title_settings,
+        thumbnail_settings,
+        script_settings,
+        production_settings,
+        created_at,
+        updated_at
+      `)
       .order('updated_at', { ascending: false });
 
     if (error) throw error;
     return data || [];
+  }
+
+  static async getSavedProjectById(id: string): Promise<SavedProject | null> {
+    // Full query for detailed view - includes all columns
+    const { data, error } = await supabase
+      .from('saved_projects')
+      .select('*')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) throw error;
+    return data;
   }
 
   static async saveProject(project: VideoProject, projectName: string): Promise<SavedProject> {
