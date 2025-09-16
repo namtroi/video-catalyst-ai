@@ -850,18 +850,6 @@ export const MediaGenerationStep = ({
           </Card>
         )}
 
-        {/* Action Buttons */}
-        {!isReadOnly && onNext && (
-          <div className="flex justify-center pt-6 print:hidden">
-            <Button 
-              onClick={onNext}
-              size="lg"
-              className="bg-primary text-primary-foreground hover:bg-primary-hover"
-            >
-              Complete Project
-            </Button>
-          </div>
-        )}
 
         {/* Footer with PDF button (hidden in print mode) */}
         <footer className="text-center pt-8 print:hidden">

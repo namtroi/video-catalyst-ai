@@ -43,6 +43,7 @@ export type Database = {
           angle: string | null
           angle_settings: string | null
           created_at: string
+          generated_production_images: string | null
           generated_thumbnails: string | null
           hook: string | null
           hook_settings: string | null
@@ -66,6 +67,7 @@ export type Database = {
           angle?: string | null
           angle_settings?: string | null
           created_at?: string
+          generated_production_images?: string | null
           generated_thumbnails?: string | null
           hook?: string | null
           hook_settings?: string | null
@@ -89,6 +91,7 @@ export type Database = {
           angle?: string | null
           angle_settings?: string | null
           created_at?: string
+          generated_production_images?: string | null
           generated_thumbnails?: string | null
           hook?: string | null
           hook_settings?: string | null

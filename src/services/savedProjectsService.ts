@@ -15,6 +15,8 @@ export interface SavedProject {
   // Generated thumbnail data
   generated_thumbnails?: string; // JSON string of ThumbnailOption[]
   selected_thumbnail_id?: string;
+  // Generated production images
+  generated_production_images?: string; // JSON string of ProductionImageOption[]
   // Settings
   topic_settings?: string;
   angle_settings?: string;
@@ -56,6 +58,7 @@ export class SavedProjectsService {
         image_video_prompts: project.imageVideoPrompts,
         generated_thumbnails: project.generatedThumbnails ? JSON.stringify(project.generatedThumbnails) : undefined,
         selected_thumbnail_id: project.selectedThumbnailId,
+        generated_production_images: project.generatedProductionImages ? JSON.stringify(project.generatedProductionImages) : undefined,
         topic_settings: project.topicSettings,
         angle_settings: project.angleSettings,
         hook_settings: project.hookSettings,
@@ -85,6 +88,7 @@ export class SavedProjectsService {
         image_video_prompts: project.imageVideoPrompts,
         generated_thumbnails: project.generatedThumbnails ? JSON.stringify(project.generatedThumbnails) : undefined,
         selected_thumbnail_id: project.selectedThumbnailId,
+        generated_production_images: project.generatedProductionImages ? JSON.stringify(project.generatedProductionImages) : undefined,
         topic_settings: project.topicSettings,
         angle_settings: project.angleSettings,
         hook_settings: project.hookSettings,
@@ -120,6 +124,15 @@ export class SavedProjectsService {
       }
     }
 
+    let generatedProductionImages = undefined;
+    if (savedProject.generated_production_images) {
+      try {
+        generatedProductionImages = JSON.parse(savedProject.generated_production_images);
+      } catch (error) {
+        console.error('Failed to parse generated production images:', error);
+      }
+    }
+
     return {
       id: crypto.randomUUID(), // Generate new ID for working project
       topic: savedProject.topic,
@@ -131,6 +144,7 @@ export class SavedProjectsService {
       imageVideoPrompts: savedProject.image_video_prompts,
       generatedThumbnails,
       selectedThumbnailId: savedProject.selected_thumbnail_id,
+      generatedProductionImages,
       topicSettings: savedProject.topic_settings,
       angleSettings: savedProject.angle_settings,
       hookSettings: savedProject.hook_settings,
@@ -138,8 +152,8 @@ export class SavedProjectsService {
       thumbnailSettings: savedProject.thumbnail_settings,
       scriptSettings: savedProject.script_settings,
       productionSettings: savedProject.production_settings,
-      currentStep: 7, // Go to summary step
-      completedSteps: new Array(7).fill(true), // Mark all steps as completed
+      currentStep: 8, // Go to media generation step
+      completedSteps: new Array(8).fill(true), // Mark all steps as completed
       createdAt: new Date(),
       updatedAt: new Date(),
     };
