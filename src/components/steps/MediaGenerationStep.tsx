@@ -71,7 +71,7 @@ export const MediaGenerationStep = ({
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [isRegeneratingThumbnails, setIsRegeneratingThumbnails] = useState(false);
-  const [selectedImageModel, setSelectedImageModel] = useState<ImageModel>('seedream-4');
+  const [selectedImageModel, setSelectedImageModel] = useState<ImageModel>('dreamshaper-lightning');
   const [selectedImageQuality, setSelectedImageQuality] = useState<'standard' | '4k'>('standard');
 
   const copyToClipboard = async (text: string, label: string) => {
@@ -704,7 +704,10 @@ export const MediaGenerationStep = ({
                                 {thumbnail.imageQuality === '4k' ? '4K' : 'HD'}
                               </Badge>
                               <Badge variant="secondary" className="text-xs">
-                                {thumbnail.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
+                                {thumbnail.imageModel?.includes('lightning') ? 
+                                  thumbnail.imageModel.split('-')[0].charAt(0).toUpperCase() + thumbnail.imageModel.split('-')[0].slice(1) :
+                                  thumbnail.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'
+                                }
                               </Badge>
                             </div>
                           </>
@@ -795,7 +798,12 @@ export const MediaGenerationStep = ({
               {/* Image Generation Controls */}
               {!isReadOnly && (
                 <div className="space-y-4 p-4 bg-muted rounded-lg print:hidden">
-                  <h4 className="font-medium text-foreground">Generate Production Images</h4>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-medium text-foreground">Generate Production Images</h4>
+                    <Badge variant="secondary" className="text-xs">
+                      {selectedImageModel?.includes('lightning') ? 'Budget-Friendly' : 'Premium Quality'}
+                    </Badge>
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                       <Label htmlFor="image-model">Image Model</Label>
@@ -804,8 +812,42 @@ export const MediaGenerationStep = ({
                           <SelectValue placeholder="Select model" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="seedream-4">Seedream 4 (Professional quality)</SelectItem>
-                          <SelectItem value="flux-1.1-pro-ultra">Flux Pro Ultra (Good for testing)</SelectItem>
+                          <SelectItem value="dreamshaper-lightning">
+                            <div className="flex items-center gap-2">
+                              <span>DreamShaper Lightning</span>
+                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="juggernaut-lightning">
+                            <div className="flex items-center gap-2">
+                              <span>Juggernaut Lightning</span>
+                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="realdream-lightning">
+                            <div className="flex items-center gap-2">
+                              <span>RealDream Lightning</span>
+                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="realvis-lightning">
+                            <div className="flex items-center gap-2">
+                              <span>RealVis Lightning</span>
+                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="seedream-4">
+                            <div className="flex items-center gap-2">
+                              <span>Seedream 4</span>
+                              <Badge variant="outline" className="text-xs">Premium</Badge>
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="flux-1.1-pro-ultra">
+                            <div className="flex items-center gap-2">
+                              <span>Flux Pro Ultra</span>
+                              <Badge variant="outline" className="text-xs">Premium</Badge>
+                            </div>
+                          </SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -865,7 +907,10 @@ export const MediaGenerationStep = ({
                                     {image.imageQuality === '4k' ? '4K' : 'HD'}
                                   </Badge>
                                   <Badge variant="secondary" className="text-xs">
-                                    {image.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
+                                    {image.imageModel?.includes('lightning') ? 
+                                      image.imageModel.split('-')[0].charAt(0).toUpperCase() + image.imageModel.split('-')[0].slice(1) :
+                                      image.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'
+                                    }
                                   </Badge>
                                 </div>
                               </div>
