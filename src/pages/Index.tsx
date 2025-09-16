@@ -15,7 +15,7 @@ import { TitleStep } from '@/components/steps/TitleStep';
 import { ThumbnailStep } from '@/components/steps/ThumbnailStep';
 import { ScriptStep } from '@/components/steps/ScriptStep';
 import { ProductionStep } from '@/components/steps/ProductionStep';
-import { ProjectSummary } from '@/components/ProjectSummary';
+import { MediaGenerationStep } from '@/components/steps/MediaGenerationStep';
 import { Button } from '@/components/ui/button';
 import { Settings, LogOut, Youtube } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -74,7 +74,7 @@ export default function Index() {
     navigate('/auth');
   };
 
-  const totalSteps = 7;
+  const totalSteps = 8;
 
   const isStepValid = (step: number): boolean => {
     switch (step) {
@@ -85,6 +85,7 @@ export default function Index() {
       case 5: return !!project.thumbnailPrompt?.trim();
       case 6: return !!project.script?.trim();
       case 7: return !!project.imageVideoPrompts?.trim();
+      case 8: return true; // Step 8 is always valid
       default: return false;
     }
   };
@@ -206,6 +207,15 @@ export default function Index() {
       isActive: project.currentStep === 7,
       isLocked: project.currentStep < 7 && !project.completedSteps[5]
     },
+    { 
+      step: 8,
+      label: "Media Gen",
+      title: "Media Generation",
+      description: "Generate production images",
+      isCompleted: project.completedSteps[7],
+      isActive: project.currentStep === 8,
+      isLocked: project.currentStep < 8 && !project.completedSteps[6]
+    },
   ];
 
   const renderCurrentStep = () => {
@@ -311,6 +321,18 @@ export default function Index() {
             selectedModel={selectedModel}
           />
         );
+      case 8:
+        return (
+          <MediaGenerationStep
+            project={project}
+            onNext={() => {
+              completeStep(8);
+              setShowSummary(true);
+            }}
+            onBackToSteps={() => updateProject({ currentStep: 7 })}
+            onGeneratedProductionImagesChange={(images) => updateProject({ generatedProductionImages: images })}
+          />
+        );
       default:
         return null;
     }
@@ -347,7 +369,7 @@ export default function Index() {
     
     return (
       <div className="min-h-screen bg-background">
-        <ProjectSummary 
+        <MediaGenerationStep 
           project={displayProject} 
           onBackToSteps={viewingSavedProject ? handleBackFromSavedProject : () => setShowSummary(false)}
           onViewSavedProjects={!viewingSavedProject ? handleViewSavedProjects : undefined}

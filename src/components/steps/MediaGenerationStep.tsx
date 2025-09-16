@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { 
   ArrowLeft, 
   Download, 
@@ -21,9 +22,11 @@ import {
   Moon,
   Sun,
   Save,
-  BookMarked
+  BookMarked,
+  Loader2
 } from 'lucide-react';
-import { VideoProject, Scene, ScenesResponse } from '@/types';
+import { VideoProject, Scene, ScenesResponse, ProductionImageOption, ImageModel } from '@/types';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { SavedProjectsService } from '@/services/savedProjectsService';
 import {
@@ -38,26 +41,33 @@ import {
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
 
-interface ProjectSummaryProps {
+interface MediaGenerationStepProps {
   project: VideoProject;
+  onNext?: () => void;
   onBackToSteps: () => void;
   onViewSavedProjects?: () => void;
   isReadOnly?: boolean;
   savedProjectName?: string;
+  onGeneratedProductionImagesChange?: (images: ProductionImageOption[]) => void;
 }
 
-export const ProjectSummary = ({ 
+export const MediaGenerationStep = ({ 
   project, 
+  onNext,
   onBackToSteps, 
   onViewSavedProjects,
   isReadOnly = false,
-  savedProjectName
-}: ProjectSummaryProps) => {
+  savedProjectName,
+  onGeneratedProductionImagesChange
+}: MediaGenerationStepProps) => {
   const [isScriptExpanded, setIsScriptExpanded] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSaveDialogOpen, setIsSaveDialogOpen] = useState(false);
   const [projectName, setProjectName] = useState(savedProjectName || '');
   const [isSaving, setIsSaving] = useState(false);
+  const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [selectedImageModel, setSelectedImageModel] = useState<ImageModel>('seedream-4');
+  const [selectedImageQuality, setSelectedImageQuality] = useState<'standard' | '4k'>('standard');
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -126,6 +136,22 @@ export const ProjectSummary = ({
             zip.file(fileName, blob);
           } catch (error) {
             console.error('Failed to add thumbnail image to zip:', error);
+          }
+        }
+      }
+    }
+
+    // Add production images
+    if (project.generatedProductionImages && project.generatedProductionImages.length > 0) {
+      for (const productionImage of project.generatedProductionImages) {
+        if (productionImage.imageUrl) {
+          try {
+            const response = await fetch(productionImage.imageUrl);
+            const blob = await response.blob();
+            const fileName = `08-production-scene-${productionImage.sceneNumber}.jpg`;
+            zip.file(fileName, blob);
+          } catch (error) {
+            console.error('Failed to add production image to zip:', error);
           }
         }
       }
@@ -263,6 +289,63 @@ export const ProjectSummary = ({
     }
   };
 
+  const handleGenerateProductionImages = async () => {
+    if (!project.imageVideoPrompts) return;
+    
+    const scenes = parseScenes(project.imageVideoPrompts);
+    if (scenes.length === 0) {
+      toast({
+        title: "No image prompts found",
+        description: "Please generate production prompts first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsGeneratingImages(true);
+    try {
+      const prompts = scenes.map(scene => scene.image_prompt).filter(prompt => prompt.trim());
+      
+      const { data, error } = await supabase.functions.invoke('generate-images', {
+        body: {
+          prompts,
+          quality: selectedImageQuality,
+          model: selectedImageModel
+        }
+      });
+
+      if (error) throw error;
+
+      if (data && data.images) {
+        const newProductionImages: ProductionImageOption[] = data.images.map((img: any, index: number) => ({
+          id: crypto.randomUUID(),
+          sceneNumber: scenes[index]?.scene_number || index + 1,
+          imagePrompt: prompts[index] || '',
+          imageUrl: img.imageUrl,
+          imageQuality: selectedImageQuality,
+          imageModel: selectedImageModel
+        }));
+
+        const updatedImages = [...(project.generatedProductionImages || []), ...newProductionImages];
+        onGeneratedProductionImagesChange?.(updatedImages);
+
+        toast({
+          title: "Images Generated!",
+          description: `Successfully generated ${newProductionImages.length} production images`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to generate production images:', error);
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate production images. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingImages(false);
+    }
+  };
+
   const scenes = project.imageVideoPrompts ? parseScenes(project.imageVideoPrompts) : [];
 
   return (
@@ -314,12 +397,12 @@ export const ProjectSummary = ({
         {/* Header Section */}
         <header className="text-center space-y-4 print:space-y-2">
           <h1 className="text-3xl sm:text-4xl font-bold text-foreground print:text-black">
-            {isReadOnly ? savedProjectName || 'Saved Project' : 'Your Complete YouTube Video Project'}
+            {isReadOnly ? savedProjectName || 'Saved Project' : 'Step 8: Media Generation'}
           </h1>
           <p className="text-muted-foreground">
             {isReadOnly 
               ? 'View your saved project details and export your work.'
-              : 'Your complete video project is ready! Review all components and export your work.'
+              : 'Generate production images and finalize your complete video project.'
             }
           </p>
           
@@ -486,261 +569,310 @@ export const ProjectSummary = ({
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-foreground print:text-black font-medium">{project.title}</p>
+                <p className="text-foreground print:text-black">{project.title}</p>
               </CardContent>
             </Card>
           )}
         </div>
 
-        {/* Thumbnails Section */}
-        {(project.thumbnailPrompt || (project.generatedThumbnails && project.generatedThumbnails.length > 0)) && (
-          <section className="space-y-4">
-            <h2 className="text-2xl font-bold text-foreground print:text-black flex items-center">
-              <ImageIcon className="w-6 h-6 mr-2 text-primary print:text-black" />
-              Thumbnail Options
-            </h2>
-            
-            {project.generatedThumbnails && project.generatedThumbnails.length > 0 ? (
-              <div className="grid sm:grid-cols-1 md:grid-cols-2 gap-4">
-                {project.generatedThumbnails.map((thumbnail) => (
-                  <Card 
-                    key={thumbnail.id} 
-                    className={`shadow-md print:shadow-none print:border print:border-gray-300 ${
-                      project.selectedThumbnailId === thumbnail.id ? 'border-2 border-success ring-2 ring-success/20' : 'border-2 border-muted'
-                    }`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="flex justify-between items-start mb-3">
-                        {thumbnail.imageUrl ? (
-                          <div className="w-full relative group">
+        {/* Thumbnail Section */}
+        {project.thumbnailPrompt && (
+          <Card className="shadow-md print:shadow-none print:border print:border-gray-300">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <ImageIcon className="w-5 h-5 text-primary print:text-black" />
+                  <CardTitle className="text-xl print:text-black">Thumbnail</CardTitle>
+                </div>
+                <Button
+                  onClick={() => copyToClipboard(project.thumbnailPrompt!, 'Thumbnail prompt')}
+                  variant="ghost"
+                  size="sm"
+                  className="print:hidden"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-medium mb-2 print:text-black">Prompt:</h4>
+                <p className="text-foreground print:text-black">{project.thumbnailPrompt}</p>
+              </div>
+              
+              {project.generatedThumbnails && project.generatedThumbnails.length > 0 && (
+                <div>
+                  <h4 className="font-medium mb-3 print:text-black">Generated Options:</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {project.generatedThumbnails.map((thumbnail) => (
+                      <div 
+                        key={thumbnail.id} 
+                        className={`relative border-2 rounded-lg overflow-hidden transition-all ${
+                          project.selectedThumbnailId === thumbnail.id 
+                            ? 'border-primary ring-2 ring-primary/20' 
+                            : 'border-border hover:border-primary/50'
+                        }`}
+                      >
+                        {thumbnail.imageUrl && (
+                          <>
                             <img 
-                              src={thumbnail.imageUrl}
-                              alt={thumbnail.text}
-                              className="w-full aspect-video object-cover rounded-lg border"
-                              loading="lazy"
+                              src={thumbnail.imageUrl} 
+                              alt={`Thumbnail option ${thumbnail.id}`}
+                              className="w-full h-32 object-cover"
                             />
                             {project.selectedThumbnailId === thumbnail.id && (
-                              <div className="absolute top-2 left-2">
-                                <Badge className="bg-success text-success-foreground">
-                                  Selected
-                                </Badge>
+                              <div className="absolute top-2 right-2">
+                                <Badge className="bg-primary text-primary-foreground">Selected</Badge>
                               </div>
                             )}
-                            <div className="absolute top-2 right-2 flex gap-1">
-                              {thumbnail.imageQuality && (
-                                <Badge 
-                                  variant={thumbnail.imageQuality === '4k' ? 'default' : 'secondary'}
-                                >
-                                  {thumbnail.imageQuality === '4k' ? '4K' : 'YouTube'}
-                                </Badge>
-                              )}
-                              {thumbnail.imageModel && (
-                                <Badge 
-                                  variant="outline"
-                                  className="text-xs"
-                                >
-                                  {thumbnail.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
-                                </Badge>
-                              )}
+                            <div className="absolute bottom-2 left-2 flex gap-1">
+                              <Badge variant="secondary" className="text-xs">
+                                {thumbnail.imageQuality === '4k' ? '4K' : 'Standard'}
+                              </Badge>
+                              <Badge variant="secondary" className="text-xs">
+                                {thumbnail.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
+                              </Badge>
                             </div>
-                          </div>
-                        ) : (
-                          <div className="w-full h-32 bg-muted rounded flex items-center justify-center print:bg-gray-100">
-                            <ImageIcon className="w-8 h-8 text-muted-foreground print:text-gray-400" />
-                          </div>
+                          </>
                         )}
                       </div>
-                      <p className="text-sm text-foreground mb-3 print:text-black">{thumbnail.text}</p>
-                      <Button
-                        onClick={() => copyToClipboard(thumbnail.text, 'Thumbnail Prompt')}
-                        variant="outline"
-                        size="sm"
-                        className="w-full print:hidden"
-                      >
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy Prompt
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            ) : project.thumbnailPrompt && (
-              <div className="grid sm:grid-cols-1 gap-4">
-                <Card className="shadow-md print:shadow-none print:border print:border-gray-300 border-2 border-muted">
-                  <CardContent className="p-4">
-                    <div className="flex justify-between items-start mb-3">
-                      <div className="w-full h-32 bg-muted rounded flex items-center justify-center print:bg-gray-100">
-                        <ImageIcon className="w-8 h-8 text-muted-foreground print:text-gray-400" />
-                      </div>
-                    </div>
-                    <p className="text-sm text-foreground mb-3 print:text-black">{project.thumbnailPrompt}</p>
-                    <Button
-                      onClick={() => copyToClipboard(project.thumbnailPrompt!, 'Thumbnail Prompt')}
-                      variant="outline"
-                      size="sm"
-                      className="w-full print:hidden"
-                    >
-                      <Copy className="w-4 h-4 mr-2" />
-                      Copy Prompt
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            )}
-          </section>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Script Section */}
         {project.script && (
-          <section className="space-y-4">
-            <Collapsible open={isScriptExpanded} onOpenChange={setIsScriptExpanded}>
-              <CollapsibleTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="w-full justify-between p-0 h-auto text-left print:hidden"
-                >
-                  <h2 className="text-2xl font-bold text-foreground flex items-center">
-                    <Video className="w-6 h-6 mr-2 text-primary" />
-                    Full Video Script
-                  </h2>
-                  {isScriptExpanded ? (
-                    <ChevronUp className="w-5 h-5" />
-                  ) : (
-                    <ChevronDown className="w-5 h-5" />
-                  )}
-                </Button>
-              </CollapsibleTrigger>
-              
-              <div className="print:block">
-                <h2 className="text-2xl font-bold text-foreground print:text-black flex items-center print:block hidden">
-                  <Video className="w-6 h-6 mr-2 text-primary print:text-black" />
-                  Full Video Script
-                </h2>
-              </div>
-              
-              <CollapsibleContent className="space-y-4 print:block">
-                <div className="flex justify-end print:hidden">
+          <Card className="shadow-md print:shadow-none print:border print:border-gray-300">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <FileText className="w-5 h-5 text-primary print:text-black" />
+                  <CardTitle className="text-xl print:text-black">Video Script</CardTitle>
+                </div>
+                <div className="flex items-center gap-2">
                   <Button
                     onClick={() => copyToClipboard(project.script!, 'Script')}
-                    variant="outline"
+                    variant="ghost"
                     size="sm"
+                    className="print:hidden"
                   >
-                    <Copy className="w-4 h-4 mr-2" />
-                    Copy Script
+                    <Copy className="w-4 h-4" />
                   </Button>
+                  <Collapsible open={isScriptExpanded} onOpenChange={setIsScriptExpanded}>
+                    <CollapsibleTrigger asChild>
+                      <Button variant="ghost" size="sm" className="print:hidden">
+                        {isScriptExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </Button>
+                    </CollapsibleTrigger>
+                  </Collapsible>
                 </div>
-                
-                <Card className="shadow-md print:shadow-none print:border print:border-gray-300">
-                  <CardContent className="p-4">
-                    <pre className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-foreground print:text-black overflow-auto max-h-96 print:max-h-none">
-                      {project.script}
-                    </pre>
-                  </CardContent>
-                </Card>
+              </div>
+            </CardHeader>
+            <Collapsible open={isScriptExpanded} onOpenChange={setIsScriptExpanded}>
+              <CollapsibleContent>
+                <CardContent>
+                  <div className="whitespace-pre-wrap text-foreground print:text-black bg-muted p-4 rounded-lg">
+                    {project.script}
+                  </div>
+                </CardContent>
               </CollapsibleContent>
             </Collapsible>
-          </section>
+          </Card>
         )}
 
-        {/* Production Prompts Section */}
+        {/* Image & Video Production Prompts Section with Image Generation */}
         {project.imageVideoPrompts && (
-          <section className="space-y-4 print:break-before-page">
-            <h2 className="text-2xl font-bold text-foreground print:text-black flex items-center">
-              <Video className="w-6 h-6 mr-2 text-primary print:text-black" />
-              Image & Video Production Prompts
-            </h2>
-            
-             {scenes.length > 0 ? (
-              <ol className="space-y-6">
-                {scenes.map((scene) => (
-                  <li key={scene.scene_number} className="space-y-3">
-                    <h3 className="text-lg font-semibold text-foreground print:text-black">
-                      Scene {scene.scene_number}
-                    </h3>
-                    
-                    {scene.image_prompt && (
-                      <Card className="shadow-sm print:shadow-none print:border print:border-gray-200">
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-center">
-                            <h4 className="font-medium text-foreground print:text-black flex items-center">
-                              <ImageIcon className="w-4 h-4 mr-2 text-primary print:text-black" />
-                              Image Prompt
-                            </h4>
-                            <Button
-                              onClick={() => copyToClipboard(scene.image_prompt, `Scene ${scene.scene_number} Image Prompt`)}
-                              variant="ghost"
-                              size="sm"
-                              className="print:hidden"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-foreground print:text-black">{scene.image_prompt}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                    
-                    {scene.video_prompt && (
-                      <Card className="shadow-sm print:shadow-none print:border print:border-gray-200">
-                        <CardHeader className="pb-2">
-                          <div className="flex justify-between items-center">
-                            <h4 className="font-medium text-foreground print:text-black flex items-center">
-                              <Video className="w-4 h-4 mr-2 text-primary print:text-black" />
-                              Video Prompt
-                            </h4>
-                            <Button
-                              onClick={() => copyToClipboard(scene.video_prompt, `Scene ${scene.scene_number} Video Prompt`)}
-                              variant="ghost"
-                              size="sm"
-                              className="print:hidden"
-                            >
-                              <Copy className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </CardHeader>
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-foreground print:text-black">{scene.video_prompt}</p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </li>
-                ))}
-              </ol>
-            ) : (
-              <Card className="shadow-md print:shadow-none print:border print:border-gray-300">
-                <CardContent className="p-4">
-                  <div className="flex justify-between items-start mb-3">
-                    <h4 className="font-medium text-foreground print:text-black">Production Prompts</h4>
-                    <Button
-                      onClick={() => copyToClipboard(project.imageVideoPrompts!, 'Production Prompts')}
-                      variant="ghost"
-                      size="sm"
-                      className="print:hidden"
-                    >
-                      <Copy className="w-4 h-4" />
-                    </Button>
+          <Card className="shadow-md print:shadow-none print:border print:border-gray-300">
+            <CardHeader className="pb-3">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Video className="w-5 h-5 text-primary print:text-black" />
+                  <CardTitle className="text-xl print:text-black">Image & Video Production Prompts</CardTitle>
+                </div>
+                <Button
+                  onClick={() => copyToClipboard(project.imageVideoPrompts!, 'Production prompts')}
+                  variant="ghost"
+                  size="sm"
+                  className="print:hidden"
+                >
+                  <Copy className="w-4 h-4" />
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              
+              {/* Image Generation Controls */}
+              {!isReadOnly && (
+                <div className="space-y-4 p-4 bg-muted rounded-lg print:hidden">
+                  <h4 className="font-medium text-foreground">Generate Production Images</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="image-model">Image Model</Label>
+                      <Select value={selectedImageModel} onValueChange={(value: ImageModel) => setSelectedImageModel(value)}>
+                        <SelectTrigger id="image-model">
+                          <SelectValue placeholder="Select model" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="seedream-4">Seedream 4 (Fast)</SelectItem>
+                          <SelectItem value="flux-1.1-pro-ultra">Flux Pro Ultra (High Quality)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div>
+                      <Label htmlFor="image-quality">Quality</Label>
+                      <Select value={selectedImageQuality} onValueChange={(value: 'standard' | '4k') => setSelectedImageQuality(value)}>
+                        <SelectTrigger id="image-quality">
+                          <SelectValue placeholder="Select quality" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="standard">Standard</SelectItem>
+                          <SelectItem value="4k">4K</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
                   </div>
-                  <pre className="whitespace-pre-wrap text-sm text-foreground print:text-black">
-                    {project.imageVideoPrompts}
-                  </pre>
-                </CardContent>
-              </Card>
-            )}
-          </section>
+                  <Button 
+                    onClick={handleGenerateProductionImages}
+                    disabled={isGeneratingImages || scenes.length === 0}
+                    className="w-full"
+                  >
+                    {isGeneratingImages ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Generating Images...
+                      </>
+                    ) : (
+                      <>
+                        <ImageIcon className="w-4 h-4 mr-2" />
+                        Generate Images for {scenes.length} Scene{scenes.length !== 1 ? 's' : ''}
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+
+              {/* Generated Production Images */}
+              {project.generatedProductionImages && project.generatedProductionImages.length > 0 && (
+                <div className="space-y-4">
+                  <h4 className="font-medium text-foreground print:text-black">Generated Production Images</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {project.generatedProductionImages.map((image) => (
+                      <div key={image.id} className="border rounded-lg overflow-hidden">
+                        {image.imageUrl && (
+                          <>
+                            <img 
+                              src={image.imageUrl} 
+                              alt={`Scene ${image.sceneNumber} production image`}
+                              className="w-full h-32 object-cover"
+                            />
+                            <div className="p-3 space-y-2">
+                              <div className="flex items-center justify-between">
+                                <Badge variant="outline">Scene {image.sceneNumber}</Badge>
+                                <div className="flex gap-1">
+                                  <Badge variant="secondary" className="text-xs">
+                                    {image.imageQuality === '4k' ? '4K' : 'Standard'}
+                                  </Badge>
+                                  <Badge variant="secondary" className="text-xs">
+                                    {image.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
+                                  </Badge>
+                                </div>
+                              </div>
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {image.imagePrompt}
+                              </p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Scene Prompts */}
+              <div className="space-y-4">
+                <h4 className="font-medium text-foreground print:text-black">Scene Breakdown</h4>
+                {scenes.length > 0 ? (
+                  <div className="space-y-4">
+                    {scenes.map((scene, index) => (
+                      <div key={index} className="border rounded-lg p-4 space-y-3">
+                        <h5 className="font-medium text-foreground print:text-black flex items-center gap-2">
+                          <Badge variant="outline">Scene {scene.scene_number}</Badge>
+                        </h5>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h6 className="text-sm font-medium text-muted-foreground">Image Prompt:</h6>
+                            <Button
+                              onClick={() => copyToClipboard(scene.image_prompt, `Scene ${scene.scene_number} image prompt`)}
+                              variant="ghost"
+                              size="sm"
+                              className="print:hidden"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <p className="text-sm text-foreground print:text-black bg-background p-2 rounded border">
+                            {scene.image_prompt}
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h6 className="text-sm font-medium text-muted-foreground">Video Prompt:</h6>
+                            <Button
+                              onClick={() => copyToClipboard(scene.video_prompt, `Scene ${scene.scene_number} video prompt`)}
+                              variant="ghost"
+                              size="sm"
+                              className="print:hidden"
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          <p className="text-sm text-foreground print:text-black bg-background p-2 rounded border">
+                            {scene.video_prompt}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>Production prompts will appear here once generated.</p>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Footer */}
+        {/* Action Buttons */}
+        {!isReadOnly && onNext && (
+          <div className="flex justify-center pt-6 print:hidden">
+            <Button 
+              onClick={onNext}
+              size="lg"
+              className="bg-primary text-primary-foreground hover:bg-primary-hover"
+            >
+              Complete Project
+            </Button>
+          </div>
+        )}
+
+        {/* Footer with PDF button (hidden in print mode) */}
         <footer className="text-center pt-8 print:hidden">
           <Button
             onClick={generatePDF}
             variant="outline"
-            className="bg-success text-success-foreground hover:bg-success/90"
             size="lg"
+            className="w-full sm:w-auto"
           >
-            <Download className="w-4 h-4 mr-2" />
-            Download PDF
+            <FileText className="w-4 h-4 mr-2" />
+            Download PDF Summary
           </Button>
         </footer>
       </div>

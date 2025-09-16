@@ -18,7 +18,7 @@ export const useProjectStore = () => {
     return {
       id: crypto.randomUUID(),
       currentStep: 1,
-      completedSteps: new Array(7).fill(false),
+      completedSteps: new Array(8).fill(false),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -50,7 +50,7 @@ export const useProjectStore = () => {
       return {
         ...prev,
         completedSteps: newCompletedSteps,
-        currentStep: Math.min(step + 1, 7),
+        currentStep: Math.min(step + 1, 8),
         updatedAt: new Date(),
       };
     });
@@ -68,7 +68,7 @@ export const useProjectStore = () => {
     const newProject: VideoProject = {
       id: crypto.randomUUID(),
       currentStep: 1,
-      completedSteps: new Array(7).fill(false),
+      completedSteps: new Array(8).fill(false),
       createdAt: new Date(),
       updatedAt: new Date(),
     };
