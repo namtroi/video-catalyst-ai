@@ -8,7 +8,7 @@ const corsHeaders = {
 interface SingleImageGenerationRequest {
   prompt: string;
   quality: 'standard' | '4k';
-  model: 'seedream-4' | 'flux-1.1-pro-ultra';
+  model: 'dreamshaper-lightning' | 'juggernaut-lightning' | 'realdream-lightning' | 'realvis-lightning' | 'seedream-4' | 'flux-1.1-pro-ultra';
   promptId: string;
 }
 
@@ -24,7 +24,7 @@ serve(async (req) => {
       throw new Error('SEGMIND_API_KEY is not set');
     }
 
-    const { prompt, quality, model = 'seedream-4', promptId }: SingleImageGenerationRequest = await req.json();
+    const { prompt, quality, model = 'dreamshaper-lightning', promptId }: SingleImageGenerationRequest = await req.json();
 
     if (!prompt) {
       return new Response(
@@ -37,7 +37,56 @@ serve(async (req) => {
 
     // Configure parameters based on model and quality
     const getModelConfig = (model: string, quality: string) => {
-      if (model === 'flux-1.1-pro-ultra') {
+      // Lightning models configuration - optimized for cost and speed
+      if (model === 'dreamshaper-lightning') {
+        return {
+          endpoint: 'https://api.segmind.com/v1/sdxl-lightning-dreamshaper',
+          steps: quality === '4k' ? 6 : 4,
+          params: {
+            scheduler: 'DPM++ 2M Karras',
+            width: quality === '4k' ? 1344 : 1024,
+            height: quality === '4k' ? 768 : 576,
+            samples: 1,
+            guidance_scale: 1.0
+          }
+        };
+      } else if (model === 'juggernaut-lightning') {
+        return {
+          endpoint: 'https://api.segmind.com/v1/sdxl-lightning-juggernaut',
+          steps: quality === '4k' ? 6 : 4,
+          params: {
+            scheduler: 'DPM++ 2M Karras',
+            width: quality === '4k' ? 1344 : 1024,
+            height: quality === '4k' ? 768 : 576,
+            samples: 1,
+            guidance_scale: 1.0
+          }
+        };
+      } else if (model === 'realdream-lightning') {
+        return {
+          endpoint: 'https://api.segmind.com/v1/sdxl-lightning-realdream',
+          steps: quality === '4k' ? 6 : 4,
+          params: {
+            scheduler: 'DPM++ 2M Karras',
+            width: quality === '4k' ? 1344 : 1024,
+            height: quality === '4k' ? 768 : 576,
+            samples: 1,
+            guidance_scale: 1.0
+          }
+        };
+      } else if (model === 'realvis-lightning') {
+        return {
+          endpoint: 'https://api.segmind.com/v1/sdxl-lightning-realvis',
+          steps: quality === '4k' ? 6 : 4,
+          params: {
+            scheduler: 'DPM++ 2M Karras',
+            width: quality === '4k' ? 1344 : 1024,
+            height: quality === '4k' ? 768 : 576,
+            samples: 1,
+            guidance_scale: 1.0
+          }
+        };
+      } else if (model === 'flux-1.1-pro-ultra') {
         return {
           endpoint: 'https://api.segmind.com/v1/flux-1.1-pro-ultra',
           steps: quality === '4k' ? 25 : 12,

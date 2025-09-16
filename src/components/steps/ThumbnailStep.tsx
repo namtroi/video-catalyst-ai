@@ -47,7 +47,7 @@ export const ThumbnailStep = ({
   const [prompts, setPrompts] = useState<Array<ThumbnailOption & { hasError?: boolean; errorMessage?: string; errorType?: string }>>(generatedThumbnails || []);
   const [isGenerating, setIsGenerating] = useState(false);
   const [imageQuality, setImageQuality] = useState<'standard' | '4k'>('standard');
-  const [imageModel, setImageModel] = useState<ImageModel>('seedream-4');
+  const [imageModel, setImageModel] = useState<ImageModel>('dreamshaper-lightning');
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
   const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState<number>(-1);
@@ -239,9 +239,22 @@ export const ThumbnailStep = ({
   };
 
   const getModelInfo = (model: ImageModel) => {
-    return model === 'flux-1.1-pro-ultra'
-      ? { label: 'Flux Pro Ultra', description: 'Good for testing' }
-      : { label: 'Seedream 4', description: 'Professional quality' };
+    switch (model) {
+      case 'dreamshaper-lightning':
+        return { label: 'DreamShaper Lightning', description: 'Budget - Fast & Creative', cost: 'Cheapest', badge: 'Budget' };
+      case 'juggernaut-lightning':
+        return { label: 'Juggernaut Lightning', description: 'Budget - Cinematic Style', cost: 'Cheapest', badge: 'Budget' };
+      case 'realdream-lightning':
+        return { label: 'RealDream Lightning', description: 'Budget - Realistic Images', cost: 'Cheapest', badge: 'Budget' };
+      case 'realvis-lightning':
+        return { label: 'Realvis Lightning', description: 'Budget - Photo-realistic', cost: 'Cheapest', badge: 'Budget' };
+      case 'flux-1.1-pro-ultra':
+        return { label: 'Flux Pro Ultra', description: 'Premium - Highest Quality', cost: 'Expensive', badge: 'Premium' };
+      case 'seedream-4':
+        return { label: 'Seedream 4', description: 'Standard - Professional', cost: 'Moderate', badge: 'Standard' };
+      default:
+        return { label: 'DreamShaper Lightning', description: 'Budget - Fast & Creative', cost: 'Cheapest', badge: 'Budget' };
+    }
   };
 
   return (
@@ -371,14 +384,15 @@ export const ThumbnailStep = ({
                                        {promptOption.imageQuality === '4k' ? '4K' : 'HD'}
                                      </Badge>
                                    )}
-                                   {promptOption.imageModel && (
-                                     <Badge 
-                                       variant="outline"
-                                       className="text-xs"
-                                     >
-                                       {promptOption.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
-                                     </Badge>
-                                   )}
+                                    {promptOption.imageModel && (
+                                      <Badge 
+                                        variant="outline"
+                                        className="text-xs"
+                                      >
+                                        {promptOption.imageModel.includes('lightning') ? 'Lightning' : 
+                                         promptOption.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
+                                      </Badge>
+                                    )}
                                  </div>
                               </div>
                              ) : promptOption.hasError ? (
@@ -510,22 +524,88 @@ export const ThumbnailStep = ({
                       <SelectValue placeholder="Select model" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="seedream-4">
-                        <div>
-                          <div className="font-medium">Seedream 4</div>
-                          <div className="text-xs text-muted-foreground">Professional quality</div>
+                      {/* Budget Models - Cheapest Options */}
+                      <SelectItem value="dreamshaper-lightning">
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium flex items-center gap-2">
+                              DreamShaper Lightning 
+                              <Badge variant="secondary" className="text-xs">Budget</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Fast & Creative • 60-80% cheaper</div>
+                          </div>
                         </div>
                       </SelectItem>
+                      <SelectItem value="juggernaut-lightning">
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium flex items-center gap-2">
+                              Juggernaut Lightning 
+                              <Badge variant="secondary" className="text-xs">Budget</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Cinematic Style • 60-80% cheaper</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="realdream-lightning">
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium flex items-center gap-2">
+                              RealDream Lightning 
+                              <Badge variant="secondary" className="text-xs">Budget</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Realistic Images • 60-80% cheaper</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="realvis-lightning">
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium flex items-center gap-2">
+                              Realvis Lightning 
+                              <Badge variant="secondary" className="text-xs">Budget</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Photo-realistic • 60-80% cheaper</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      
+                      {/* Standard Models */}
+                      <SelectItem value="seedream-4">
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium flex items-center gap-2">
+                              Seedream 4 
+                              <Badge variant="outline" className="text-xs">Standard</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Professional quality • Moderate cost</div>
+                          </div>
+                        </div>
+                      </SelectItem>
+                      
+                      {/* Premium Models */}
                       <SelectItem value="flux-1.1-pro-ultra">
-                        <div>
-                          <div className="font-medium">Flux Pro Ultra</div>
-                          <div className="text-xs text-muted-foreground">Good for testing</div>
+                        <div className="flex items-center justify-between w-full">
+                          <div>
+                            <div className="font-medium flex items-center gap-2">
+                              Flux Pro Ultra 
+                              <Badge variant="default" className="text-xs">Premium</Badge>
+                            </div>
+                            <div className="text-xs text-muted-foreground">Highest quality • More expensive</div>
+                          </div>
                         </div>
                       </SelectItem>
                     </SelectContent>
                   </Select>
-                  <div className="text-sm text-muted-foreground">
-                    {getModelInfo(imageModel).description}
+                  <div className="text-sm text-muted-foreground flex items-center justify-between">
+                    <span>{getModelInfo(imageModel).description}</span>
+                    <Badge 
+                      variant={getModelInfo(imageModel).badge === 'Budget' ? 'secondary' : 
+                              getModelInfo(imageModel).badge === 'Premium' ? 'default' : 'outline'}
+                      className="text-xs"
+                    >
+                      {getModelInfo(imageModel).cost}
+                    </Badge>
                   </div>
                 </div>
 
