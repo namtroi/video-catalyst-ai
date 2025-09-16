@@ -331,6 +331,7 @@ export default function Index() {
             }}
             onBackToSteps={() => updateProject({ currentStep: 7 })}
             onGeneratedProductionImagesChange={(images) => updateProject({ generatedProductionImages: images })}
+            onProjectUpdate={updateProject}
           />
         );
       default:
@@ -375,6 +376,7 @@ export default function Index() {
           onViewSavedProjects={!viewingSavedProject ? handleViewSavedProjects : undefined}
           isReadOnly={!!viewingSavedProject}
           savedProjectName={viewingSavedProject?.project_name}
+          onProjectUpdate={viewingSavedProject ? undefined : updateProject}
         />
       </div>
     );

@@ -1,9 +1,23 @@
-import { useState, useEffect } from 'react';
-import { VideoProject, Template } from '@/types';
+import { useState, useEffect, useRef } from 'react';
+import { VideoProject, Template, ThumbnailOption, ProductionImageOption } from '@/types';
 
 const STORAGE_KEY = 'youtube-pipeline-project';
+const SESSION_IMAGES_KEY = 'youtube-pipeline-session-images';
 
 export const useProjectStore = () => {
+  // Separate state for session images to prevent loss during localStorage operations
+  const [sessionImages, setSessionImages] = useState<{
+    thumbnails: ThumbnailOption[];
+    productionImages: ProductionImageOption[];
+  }>(() => {
+    try {
+      const saved = sessionStorage.getItem(SESSION_IMAGES_KEY);
+      return saved ? JSON.parse(saved) : { thumbnails: [], productionImages: [] };
+    } catch {
+      return { thumbnails: [], productionImages: [] };
+    }
+  });
+
   const [project, setProject] = useState<VideoProject>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -25,6 +39,22 @@ export const useProjectStore = () => {
   });
 
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
+
+  // Save session images separately
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(SESSION_IMAGES_KEY, JSON.stringify(sessionImages));
+    } catch (error) {
+      console.warn('Failed to save session images:', error);
+    }
+  }, [sessionImages]);
+
+  // Merge session images with project data for display
+  const projectWithImages: VideoProject = {
+    ...project,
+    generatedThumbnails: sessionImages.thumbnails.length > 0 ? sessionImages.thumbnails : project.generatedThumbnails,
+    generatedProductionImages: sessionImages.productionImages.length > 0 ? sessionImages.productionImages : project.generatedProductionImages,
+  };
 
   useEffect(() => {
     try {
@@ -82,6 +112,21 @@ export const useProjectStore = () => {
   }, [project]);
 
   const updateProject = (updates: Partial<VideoProject>) => {
+    // Handle image updates separately
+    if (updates.generatedThumbnails) {
+      setSessionImages(prev => ({
+        ...prev,
+        thumbnails: updates.generatedThumbnails || []
+      }));
+    }
+    
+    if (updates.generatedProductionImages) {
+      setSessionImages(prev => ({
+        ...prev,
+        productionImages: updates.generatedProductionImages || []
+      }));
+    }
+
     setProject(prev => ({
       ...prev,
       ...updates,
@@ -121,6 +166,9 @@ export const useProjectStore = () => {
     };
     setProject(newProject);
     setSelectedTemplate(null);
+    
+    // Clear session images
+    setSessionImages({ thumbnails: [], productionImages: [] });
   };
 
   const applyTemplate = (template: Template | null) => {
@@ -139,7 +187,7 @@ export const useProjectStore = () => {
   };
 
   return {
-    project,
+    project: projectWithImages,
     updateProject,
     completeStep,
     goToStep,

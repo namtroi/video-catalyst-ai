@@ -23,7 +23,8 @@ import {
   Sun,
   Save,
   BookMarked,
-  Loader2
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 import { VideoProject, Scene, ScenesResponse, ProductionImageOption, ImageModel } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,6 +41,7 @@ import {
 } from '@/components/ui/dialog';
 import JSZip from 'jszip';
 import jsPDF from 'jspdf';
+import { ImageFallback } from '@/components/ImageFallback';
 
 interface MediaGenerationStepProps {
   project: VideoProject;
@@ -49,6 +51,7 @@ interface MediaGenerationStepProps {
   isReadOnly?: boolean;
   savedProjectName?: string;
   onGeneratedProductionImagesChange?: (images: ProductionImageOption[]) => void;
+  onProjectUpdate?: (updates: Partial<VideoProject>) => void;
 }
 
 export const MediaGenerationStep = ({ 
@@ -58,7 +61,8 @@ export const MediaGenerationStep = ({
   onViewSavedProjects,
   isReadOnly = false,
   savedProjectName,
-  onGeneratedProductionImagesChange
+  onGeneratedProductionImagesChange,
+  onProjectUpdate
 }: MediaGenerationStepProps) => {
   const [isScriptExpanded, setIsScriptExpanded] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -66,6 +70,7 @@ export const MediaGenerationStep = ({
   const [projectName, setProjectName] = useState(savedProjectName || '');
   const [isSaving, setIsSaving] = useState(false);
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
+  const [isRegeneratingThumbnails, setIsRegeneratingThumbnails] = useState(false);
   const [selectedImageModel, setSelectedImageModel] = useState<ImageModel>('seedream-4');
   const [selectedImageQuality, setSelectedImageQuality] = useState<'standard' | '4k'>('standard');
 
@@ -346,6 +351,56 @@ export const MediaGenerationStep = ({
     }
   };
 
+  const handleRegenerateThumbnails = async () => {
+    if (!project.thumbnailPrompt) {
+      toast({
+        title: "No thumbnail prompt",
+        description: "Please generate a thumbnail prompt first.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsRegeneratingThumbnails(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-images', {
+        body: {
+          prompts: [project.thumbnailPrompt, project.thumbnailPrompt, project.thumbnailPrompt],
+          quality: selectedImageQuality,
+          model: selectedImageModel
+        }
+      });
+
+      if (error) throw error;
+
+      if (data && data.images) {
+        const newThumbnails = data.images.map((img: any, index: number) => ({
+          id: crypto.randomUUID(),
+          text: project.thumbnailPrompt || `Thumbnail ${index + 1}`,
+          imageUrl: img.imageUrl,
+          imageQuality: selectedImageQuality,
+          imageModel: selectedImageModel
+        }));
+
+        onProjectUpdate?.({ generatedThumbnails: newThumbnails });
+
+        toast({
+          title: "Thumbnails Generated!",
+          description: `Successfully generated ${newThumbnails.length} thumbnail options`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to regenerate thumbnails:', error);
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate thumbnails. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsRegeneratingThumbnails(false);
+    }
+  };
+
   const scenes = project.imageVideoPrompts ? parseScenes(project.imageVideoPrompts) : [];
 
   return (
@@ -600,9 +655,28 @@ export const MediaGenerationStep = ({
                 <p className="text-foreground print:text-black">{project.thumbnailPrompt}</p>
               </div>
               
-              {project.generatedThumbnails && project.generatedThumbnails.length > 0 && (
-                <div>
-                  <h4 className="font-medium mb-3 print:text-black">Generated Options:</h4>
+              <div>
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="font-medium print:text-black">Generated Options:</h4>
+                  {!isReadOnly && (
+                    <Button
+                      onClick={handleRegenerateThumbnails}
+                      disabled={isRegeneratingThumbnails}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 print:hidden"
+                    >
+                      {isRegeneratingThumbnails ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="w-4 h-4" />
+                      )}
+                      {isRegeneratingThumbnails ? 'Generating...' : 'Regenerate'}
+                    </Button>
+                  )}
+                </div>
+                
+                {project.generatedThumbnails && project.generatedThumbnails.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {project.generatedThumbnails.map((thumbnail) => (
                       <div 
@@ -613,7 +687,7 @@ export const MediaGenerationStep = ({
                             : 'border-border hover:border-primary/50'
                         }`}
                       >
-                        {thumbnail.imageUrl && (
+                        {thumbnail.imageUrl ? (
                           <>
                             <img 
                               src={thumbnail.imageUrl} 
@@ -634,12 +708,25 @@ export const MediaGenerationStep = ({
                               </Badge>
                             </div>
                           </>
+                        ) : (
+                          <ImageFallback 
+                            title="Thumbnail Image" 
+                            onRegenerate={!isReadOnly ? handleRegenerateThumbnails : undefined}
+                            isRegenerating={isRegeneratingThumbnails}
+                            className="h-32"
+                          />
                         )}
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <ImageFallback 
+                    title="No Thumbnail Images Generated" 
+                    onRegenerate={!isReadOnly ? handleRegenerateThumbnails : undefined}
+                    isRegenerating={isRegeneratingThumbnails}
+                  />
+                )}
+              </div>
             </CardContent>
           </Card>
         )}
