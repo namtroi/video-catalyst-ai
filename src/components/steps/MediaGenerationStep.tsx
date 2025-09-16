@@ -818,24 +818,6 @@ export const MediaGenerationStep = ({
                               <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
                             </div>
                           </SelectItem>
-                          <SelectItem value="juggernaut-lightning">
-                            <div className="flex items-center gap-2">
-                              <span>Juggernaut Lightning</span>
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="realdream-lightning">
-                            <div className="flex items-center gap-2">
-                              <span>RealDream Lightning</span>
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="realvis-lightning">
-                            <div className="flex items-center gap-2">
-                              <span>RealVis Lightning</span>
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
-                            </div>
-                          </SelectItem>
                           <SelectItem value="seedream-4">
                             <div className="flex items-center gap-2">
                               <span>Seedream 4</span>

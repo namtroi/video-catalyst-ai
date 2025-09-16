@@ -242,12 +242,6 @@ export const ThumbnailStep = ({
     switch (model) {
       case 'dreamshaper-lightning':
         return { label: 'DreamShaper Lightning', description: 'Budget - Fast & Creative', cost: 'Cheapest', badge: 'Budget' };
-      case 'juggernaut-lightning':
-        return { label: 'Juggernaut Lightning', description: 'Budget - Cinematic Style', cost: 'Cheapest', badge: 'Budget' };
-      case 'realdream-lightning':
-        return { label: 'RealDream Lightning', description: 'Budget - Realistic Images', cost: 'Cheapest', badge: 'Budget' };
-      case 'realvis-lightning':
-        return { label: 'Realvis Lightning', description: 'Budget - Photo-realistic', cost: 'Cheapest', badge: 'Budget' };
       case 'flux-1.1-pro-ultra':
         return { label: 'Flux Pro Ultra', description: 'Premium - Highest Quality', cost: 'Expensive', badge: 'Premium' };
       case 'seedream-4':
