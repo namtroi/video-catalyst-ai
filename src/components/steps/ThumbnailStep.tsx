@@ -179,8 +179,8 @@ export const ThumbnailStep = ({
 
   const getQualityInfo = (quality: 'standard' | '4k') => {
     return quality === '4k' 
-      ? { label: '4K High Quality', size: '2560×1440', cost: 'Higher cost' }
-      : { label: 'YouTube Standard', size: '1280×720', cost: 'Lower cost' };
+      ? { label: '4K Ultra HD', size: '3840×2160', cost: 'Higher cost' }
+      : { label: 'HD Quality', size: '1920×1080', cost: 'Lower cost' };
   };
 
   const getModelInfo = (model: ImageModel) => {
@@ -313,7 +313,7 @@ export const ThumbnailStep = ({
                                      <Badge 
                                        variant={promptOption.imageQuality === '4k' ? 'default' : 'secondary'}
                                      >
-                                       {promptOption.imageQuality === '4k' ? '4K' : 'YouTube'}
+                                       {promptOption.imageQuality === '4k' ? '4K' : 'HD'}
                                      </Badge>
                                    )}
                                    {promptOption.imageModel && (
@@ -404,13 +404,13 @@ export const ThumbnailStep = ({
                     <SelectContent>
                       <SelectItem value="standard">
                         <div>
-                          <div className="font-medium">Standard</div>
+                          <div className="font-medium">HD (1920×1080)</div>
                           <div className="text-xs text-muted-foreground">Lower cost • Faster generation</div>
                         </div>
                       </SelectItem>
                       <SelectItem value="4k">
                         <div>
-                          <div className="font-medium">High Quality</div>
+                          <div className="font-medium">4K (3840×2160)</div>
                           <div className="text-xs text-muted-foreground">Higher cost • Best quality</div>
                         </div>
                       </SelectItem>

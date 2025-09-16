@@ -701,7 +701,7 @@ export const MediaGenerationStep = ({
                             )}
                             <div className="absolute bottom-2 left-2 flex gap-1">
                               <Badge variant="secondary" className="text-xs">
-                                {thumbnail.imageQuality === '4k' ? '4K' : 'Standard'}
+                                {thumbnail.imageQuality === '4k' ? '4K' : 'HD'}
                               </Badge>
                               <Badge variant="secondary" className="text-xs">
                                 {thumbnail.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
@@ -816,8 +816,8 @@ export const MediaGenerationStep = ({
                           <SelectValue placeholder="Select quality" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="standard">Standard</SelectItem>
-                          <SelectItem value="4k">4K</SelectItem>
+                          <SelectItem value="standard">HD (1920×1080)</SelectItem>
+                          <SelectItem value="4k">4K (3840×2160)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -861,7 +861,7 @@ export const MediaGenerationStep = ({
                                 <Badge variant="outline">Scene {image.sceneNumber}</Badge>
                                 <div className="flex gap-1">
                                   <Badge variant="secondary" className="text-xs">
-                                    {image.imageQuality === '4k' ? '4K' : 'Standard'}
+                                    {image.imageQuality === '4k' ? '4K' : 'HD'}
                                   </Badge>
                                   <Badge variant="secondary" className="text-xs">
                                     {image.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}

@@ -48,10 +48,10 @@ serve(async (req) => {
           }
         };
       } else {
-        // Seedream-4 configuration with custom dimensions for 16:9 YouTube thumbnails
+        // Seedream-4 configuration with proper HD and 4K dimensions for 16:9 YouTube thumbnails
         const dimensions = quality === '4k' 
-          ? { width: 1920, height: 1080, size: '1920x1080' }
-          : { width: 1600, height: 900, size: '1600x900' };
+          ? { width: 3840, height: 2160, size: '3840x2160' }  // True 4K
+          : { width: 1920, height: 1080, size: '1920x1080' }; // True HD
         
         return {
           endpoint: 'https://api.segmind.com/v1/seedream-4',
