@@ -804,8 +804,8 @@ export const MediaGenerationStep = ({
                           <SelectValue placeholder="Select model" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="seedream-4">Seedream 4 (Good for testing)</SelectItem>
-                          <SelectItem value="flux-1.1-pro-ultra">Flux Pro Ultra (Professional quality)</SelectItem>
+                          <SelectItem value="seedream-4">Seedream 4 (Professional quality)</SelectItem>
+                          <SelectItem value="flux-1.1-pro-ultra">Flux Pro Ultra (Good for testing)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>

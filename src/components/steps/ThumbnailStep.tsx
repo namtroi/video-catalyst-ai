@@ -185,8 +185,8 @@ export const ThumbnailStep = ({
 
   const getModelInfo = (model: ImageModel) => {
     return model === 'flux-1.1-pro-ultra'
-      ? { label: 'Flux Pro Ultra', description: 'Professional quality' }
-      : { label: 'Seedream 4', description: 'Good for testing' };
+      ? { label: 'Flux Pro Ultra', description: 'Good for testing' }
+      : { label: 'Seedream 4', description: 'Professional quality' };
   };
 
   return (
@@ -377,13 +377,13 @@ export const ThumbnailStep = ({
                       <SelectItem value="seedream-4">
                         <div>
                           <div className="font-medium">Seedream 4</div>
-                          <div className="text-xs text-muted-foreground">Good for testing</div>
+                          <div className="text-xs text-muted-foreground">Professional quality</div>
                         </div>
                       </SelectItem>
                       <SelectItem value="flux-1.1-pro-ultra">
                         <div>
                           <div className="font-medium">Flux Pro Ultra</div>
-                          <div className="text-xs text-muted-foreground">Professional quality</div>
+                          <div className="text-xs text-muted-foreground">Good for testing</div>
                         </div>
                       </SelectItem>
                     </SelectContent>
