@@ -10,6 +10,8 @@ export interface VideoProject {
   // Generated thumbnail data
   generatedThumbnails?: ThumbnailOption[];
   selectedThumbnailId?: string;
+  // Generated production images
+  generatedProductionImages?: ProductionImageOption[];
   // Step-specific custom settings
   topicSettings?: string;
   angleSettings?: string;
@@ -91,6 +93,14 @@ export interface AIGenerationResponse {
   success: boolean;
   data?: string | GenerationOption[];
   error?: string;
+}
+
+export interface ProductionImageOption {
+  id: string;
+  text: string;
+  imageUrl?: string;
+  imageQuality?: 'standard' | '4k';
+  imageModel?: ImageModel;
 }
 
 export interface Template {
