@@ -40,7 +40,7 @@ serve(async (req) => {
       // Lightning models configuration - optimized for cost and speed
       if (model === 'dreamshaper-lightning') {
         return {
-          endpoint: 'https://api.segmind.com/v1/sdxl-lightning-dreamshaper',
+          endpoint: 'https://api.segmind.com/v1/sdxl1.0-dreamshaper-lightning',
           steps: quality === '4k' ? 6 : 4,
           params: {
             scheduler: 'DPM++ 2M Karras',
