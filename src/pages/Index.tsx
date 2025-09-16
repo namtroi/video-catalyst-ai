@@ -309,8 +309,6 @@ export default function Index() {
             onProductionSettingsChange={(productionSettings) => updateProject({ productionSettings })}
             onShowSummary={() => setShowSummary(true)}
             selectedModel={selectedModel}
-            generatedProductionImages={project.generatedProductionImages}
-            onProductionImagesChange={(images) => updateProject({ generatedProductionImages: images })}
           />
         );
       default:
