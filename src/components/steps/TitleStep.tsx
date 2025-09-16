@@ -131,11 +131,11 @@ export const TitleStep = ({
         <Button
           onClick={generateTitlesFromAI}
           disabled={isGenerating || !topic || !angle || !hook}
-          variant={isGenerating ? "secondary" : "default"}
+          variant={isGenerating ? "secondary" : (titles.length > 0 ? "outline" : "default")}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          {isGenerating ? "Generating..." : "Generate Titles"}
+          {isGenerating ? "Generating..." : (titles.length > 0 ? "Regenerate Titles" : "Generate Titles")}
         </Button>
 
         <div>

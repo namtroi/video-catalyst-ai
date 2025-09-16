@@ -488,11 +488,11 @@ export const ThumbnailStep = ({
         <Button
           onClick={generatePromptsFromAI}
           disabled={isGenerating || !title || !hook}
-          variant={isGenerating ? "secondary" : "default"}
+          variant={isGenerating ? "secondary" : (prompts.length > 0 ? "outline" : "default")}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          {isGenerating ? "Generating..." : "Generate Thumbnail Prompts"}
+          {isGenerating ? "Generating..." : (prompts.length > 0 ? "Regenerate Thumbnail Prompts" : "Generate Thumbnail Prompts")}
         </Button>
 
         {prompts.length > 0 && (

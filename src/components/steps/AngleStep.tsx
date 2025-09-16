@@ -111,11 +111,11 @@ export const AngleStep = ({
         <Button
           onClick={generateAnglesFromAI}
           disabled={isGenerating || !topic}
-          variant={isGenerating ? "secondary" : "default"}
+          variant={isGenerating ? "secondary" : (angles.length > 0 ? "outline" : "default")}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          {isGenerating ? "Generating..." : "Generate Angles"}
+          {isGenerating ? "Generating..." : (angles.length > 0 ? "Regenerate Angles" : "Generate Angles")}
         </Button>
 
         <div>

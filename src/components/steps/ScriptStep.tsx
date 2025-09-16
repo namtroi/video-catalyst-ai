@@ -124,11 +124,11 @@ export const ScriptStep = ({
         <Button
           onClick={generateScriptFromAI}
           disabled={isGenerating || !title || !hook}
-          variant={isGenerating ? "secondary" : "default"}
+          variant={isGenerating ? "secondary" : (generatedScript.trim() ? "outline" : "default")}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          {isGenerating ? "Generating..." : "Generate Script"}
+          {isGenerating ? "Generating..." : (generatedScript.trim() ? "Regenerate Script" : "Generate Script")}
         </Button>
 
         <div>

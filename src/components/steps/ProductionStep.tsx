@@ -341,11 +341,11 @@ export const ProductionStep = ({
         <Button
           onClick={() => generatePromptsFromAI(false)}
           disabled={isGenerating || !script}
-          variant={isGenerating ? "secondary" : "default"}
+          variant={isGenerating ? "secondary" : (generatedPrompts.trim() ? "outline" : "default")}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          {isGenerating ? "Generating..." : "Generate Production Prompts"}
+          {isGenerating ? "Generating..." : (generatedPrompts.trim() ? "Regenerate Production Prompts" : "Generate Production Prompts")}
         </Button>
 
         <div>
