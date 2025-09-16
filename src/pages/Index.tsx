@@ -317,7 +317,6 @@ export default function Index() {
             onImageVideoPromptsChange={(prompts) => updateProject({ imageVideoPrompts: prompts })}
             productionSettings={project.productionSettings}
             onProductionSettingsChange={(productionSettings) => updateProject({ productionSettings })}
-            onShowSummary={() => setShowSummary(true)}
             selectedModel={selectedModel}
           />
         );

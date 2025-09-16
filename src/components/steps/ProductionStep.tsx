@@ -20,7 +20,6 @@ interface ProductionStepProps {
   onImageVideoPromptsChange: (prompts: string) => void;
   productionSettings?: string;
   onProductionSettingsChange: (settings: string) => void;
-  onShowSummary: () => void;
   selectedModel: AIModel;
 }
 
@@ -35,7 +34,6 @@ export const ProductionStep = ({
   onImageVideoPromptsChange, 
   productionSettings,
   onProductionSettingsChange,
-  onShowSummary,
   selectedModel
 }: ProductionStepProps) => {
   const [generatedPrompts, setGeneratedPrompts] = useState(imageVideoPrompts || '');
@@ -191,12 +189,6 @@ export const ProductionStep = ({
     }
   };
 
-  const handleSelectPrompts = () => {
-    if (generatedPrompts) {
-      onImageVideoPromptsChange(generatedPrompts);
-      onShowSummary();
-    }
-  };
 
   useEffect(() => {
     if (imageVideoPrompts) {
@@ -368,14 +360,6 @@ export const ProductionStep = ({
           />
         </div>
 
-        {/* Show Summary Button */}
-        <Button
-          onClick={handleSelectPrompts}
-          disabled={!generatedPrompts}
-          className="w-full bg-gradient-primary hover:opacity-90"
-        >
-          Show Project Summary
-        </Button>
       </div>
     </div>
   );
