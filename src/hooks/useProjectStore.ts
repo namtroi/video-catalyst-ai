@@ -27,11 +27,58 @@ export const useProjectStore = () => {
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
 
   useEffect(() => {
-    const toSave = {
-      ...project,
-      updatedAt: new Date(),
-    };
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    try {
+      // Create a lightweight version without heavy image data
+      const toSave = {
+        ...project,
+        updatedAt: new Date(),
+        // Store thumbnails without imageUrl to save space
+        generatedThumbnails: project.generatedThumbnails?.map(thumbnail => ({
+          ...thumbnail,
+          imageUrl: undefined // Remove base64 data URLs
+        })),
+        // Store production images without imageUrl to save space
+        generatedProductionImages: project.generatedProductionImages?.map(image => ({
+          ...image,
+          imageUrl: undefined // Remove base64 data URLs
+        }))
+      };
+      
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
+    } catch (error) {
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.warn('LocalStorage quota exceeded. Clearing old data and retrying with minimal project data.');
+        
+        // Clear localStorage and save only essential data
+        localStorage.removeItem(STORAGE_KEY);
+        
+        try {
+          const minimalProject = {
+            id: project.id,
+            topic: project.topic,
+            angle: project.angle,
+            hook: project.hook,
+            title: project.title,
+            thumbnailPrompt: project.thumbnailPrompt,
+            script: project.script,
+            imageVideoPrompts: project.imageVideoPrompts,
+            currentStep: project.currentStep,
+            completedSteps: project.completedSteps,
+            createdAt: project.createdAt,
+            updatedAt: new Date(),
+            // Store only metadata, not actual images
+            thumbnailCount: project.generatedThumbnails?.length || 0,
+            productionImageCount: project.generatedProductionImages?.length || 0
+          };
+          
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(minimalProject));
+        } catch (retryError) {
+          console.error('Failed to save even minimal project data:', retryError);
+        }
+      } else {
+        console.error('Failed to save project:', error);
+      }
+    }
   }, [project]);
 
   const updateProject = (updates: Partial<VideoProject>) => {
