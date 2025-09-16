@@ -77,10 +77,10 @@ export interface ProductionImageOption {
 export interface ImageGenerationRequest {
   prompts: string[];
   quality: 'standard' | '4k';
-  model: 'dreamshaper-lightning' | 'seedream-4' | 'flux-1.1-pro-ultra';
+  model: 'seedream-4' | 'flux-1.1-pro-ultra';
 }
 
-export type ImageModel = 'dreamshaper-lightning' | 'seedream-4' | 'flux-1.1-pro-ultra';
+export type ImageModel = 'seedream-4' | 'flux-1.1-pro-ultra';
 
 export interface GeneratedImage {
   promptId: string;

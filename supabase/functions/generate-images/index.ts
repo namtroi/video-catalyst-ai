@@ -8,7 +8,7 @@ const corsHeaders = {
 interface ImageGenerationRequest {
   prompts: string[];
   quality: 'standard' | '4k';
-  model: 'dreamshaper-lightning' | 'seedream-4' | 'flux-1.1-pro-ultra';
+  model: 'seedream-4' | 'flux-1.1-pro-ultra';
 }
 
 // Segmind API returns binary image data directly
@@ -38,19 +38,7 @@ serve(async (req) => {
 
     // Configure parameters based on model and quality
     const getModelConfig = (model: string, quality: string) => {
-      if (model === 'dreamshaper-lightning') {
-        return {
-          endpoint: 'https://api.segmind.com/v1/sdxl1.0-dreamshaper-lightning',
-          steps: quality === '4k' ? 6 : 4,
-          params: {
-            scheduler: 'DPM++ 2M Karras',
-            width: quality === '4k' ? 1344 : 1024,
-            height: quality === '4k' ? 768 : 576,
-            samples: 1,
-            guidance_scale: 1.0
-          }
-        };
-      } else if (model === 'flux-1.1-pro-ultra') {
+      if (model === 'flux-1.1-pro-ultra') {
         return {
           endpoint: 'https://api.segmind.com/v1/flux-1.1-pro-ultra',
           steps: quality === '4k' ? 25 : 12,
