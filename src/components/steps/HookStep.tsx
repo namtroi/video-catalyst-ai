@@ -122,7 +122,7 @@ export const HookStep = ({
         <Button
           onClick={generateHooksFromAI}
           disabled={isGenerating || !topic || !angle}
-          variant="default"
+          variant={isGenerating ? "secondary" : "default"}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />

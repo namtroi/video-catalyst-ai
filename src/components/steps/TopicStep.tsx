@@ -188,11 +188,11 @@ export const TopicStep = ({
         <Button
           onClick={generateRandomTopic}
           disabled={isGenerating}
-          variant="default"
+          variant={isGenerating ? "secondary" : "default"}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />
-          {isGenerating ? "Generating..." : "Generate Random Topic"}
+          {isGenerating ? "Generating..." : "Generate Topic"}
         </Button>
 
 

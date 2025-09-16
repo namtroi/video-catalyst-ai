@@ -185,8 +185,8 @@ export const ThumbnailStep = ({
 
   const getModelInfo = (model: ImageModel) => {
     return model === 'flux-1.1-pro-ultra'
-      ? { label: 'Flux Pro Ultra', description: 'Better 16:9 thumbnails, professional quality' }
-      : { label: 'Seedream 4', description: 'Fast generation, good for testing' };
+      ? { label: 'Flux Pro Ultra', description: 'Professional quality' }
+      : { label: 'Seedream 4', description: 'Good for testing' };
   };
 
   return (
@@ -352,7 +352,7 @@ export const ThumbnailStep = ({
         <Button
           onClick={generatePromptsFromAI}
           disabled={isGenerating || !title || !hook}
-          variant="default"
+          variant={isGenerating ? "secondary" : "default"}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />
@@ -377,13 +377,13 @@ export const ThumbnailStep = ({
                       <SelectItem value="seedream-4">
                         <div>
                           <div className="font-medium">Seedream 4</div>
-                          <div className="text-xs text-muted-foreground">Fast generation • Good for testing</div>
+                          <div className="text-xs text-muted-foreground">Good for testing</div>
                         </div>
                       </SelectItem>
                       <SelectItem value="flux-1.1-pro-ultra">
                         <div>
                           <div className="font-medium">Flux Pro Ultra</div>
-                          <div className="text-xs text-muted-foreground">16:9 thumbnails • Professional quality</div>
+                          <div className="text-xs text-muted-foreground">Professional quality</div>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -426,7 +426,7 @@ export const ThumbnailStep = ({
             <Button
               onClick={generateImages}
               disabled={isGeneratingImages || prompts.length === 0}
-              variant="secondary"
+              variant={isGeneratingImages ? "secondary" : "default"}
               className="w-full"
             >
               <Image className="w-4 h-4 mr-2" />

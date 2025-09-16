@@ -341,7 +341,7 @@ export const ProductionStep = ({
         <Button
           onClick={() => generatePromptsFromAI(false)}
           disabled={isGenerating || !script}
-          variant="default"
+          variant={isGenerating ? "secondary" : "default"}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />

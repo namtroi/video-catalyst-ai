@@ -131,7 +131,7 @@ export const TitleStep = ({
         <Button
           onClick={generateTitlesFromAI}
           disabled={isGenerating || !topic || !angle || !hook}
-          variant="default"
+          variant={isGenerating ? "secondary" : "default"}
           className="w-full"
         >
           <Sparkles className="w-4 h-4 mr-2" />

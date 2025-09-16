@@ -662,7 +662,7 @@ export const MediaGenerationStep = ({
                     <Button
                       onClick={handleRegenerateThumbnails}
                       disabled={isRegeneratingThumbnails}
-                      variant="outline"
+                      variant={isRegeneratingThumbnails ? "secondary" : "outline"}
                       size="sm"
                       className="gap-2 print:hidden"
                     >
@@ -804,8 +804,8 @@ export const MediaGenerationStep = ({
                           <SelectValue placeholder="Select model" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="seedream-4">Seedream 4 (Fast)</SelectItem>
-                          <SelectItem value="flux-1.1-pro-ultra">Flux Pro Ultra (High Quality)</SelectItem>
+                          <SelectItem value="seedream-4">Seedream 4 (Good for testing)</SelectItem>
+                          <SelectItem value="flux-1.1-pro-ultra">Flux Pro Ultra (Professional quality)</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -825,6 +825,7 @@ export const MediaGenerationStep = ({
                   <Button 
                     onClick={handleGenerateProductionImages}
                     disabled={isGeneratingImages || scenes.length === 0}
+                    variant={isGeneratingImages ? "secondary" : "default"}
                     className="w-full"
                   >
                     {isGeneratingImages ? (
