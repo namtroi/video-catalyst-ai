@@ -242,12 +242,6 @@ export const ThumbnailStep = ({
     switch (model) {
       case 'dreamshaper-lightning':
         return { label: 'DreamShaper Lightning', description: 'Budget - Fast & Creative', cost: 'Cheapest', badge: 'Budget' };
-      case 'juggernaut-lightning':
-        return { label: 'Juggernaut Lightning', description: 'Budget - Cinematic Style', cost: 'Cheapest', badge: 'Budget' };
-      case 'realdream-lightning':
-        return { label: 'RealDream Lightning', description: 'Budget - Realistic Images', cost: 'Cheapest', badge: 'Budget' };
-      case 'realvis-lightning':
-        return { label: 'Realvis Lightning', description: 'Budget - Photo-realistic', cost: 'Cheapest', badge: 'Budget' };
       case 'flux-1.1-pro-ultra':
         return { label: 'Flux Pro Ultra', description: 'Premium - Highest Quality', cost: 'Expensive', badge: 'Premium' };
       case 'seedream-4':
@@ -532,40 +526,7 @@ export const ThumbnailStep = ({
                               DreamShaper Lightning 
                               <Badge variant="secondary" className="text-xs">Budget</Badge>
                             </div>
-                            <div className="text-xs text-muted-foreground">Fast & Creative • 60-80% cheaper</div>
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="juggernaut-lightning">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium flex items-center gap-2">
-                              Juggernaut Lightning 
-                              <Badge variant="secondary" className="text-xs">Budget</Badge>
-                            </div>
-                            <div className="text-xs text-muted-foreground">Cinematic Style • 60-80% cheaper</div>
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="realdream-lightning">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium flex items-center gap-2">
-                              RealDream Lightning 
-                              <Badge variant="secondary" className="text-xs">Budget</Badge>
-                            </div>
-                            <div className="text-xs text-muted-foreground">Realistic Images • 60-80% cheaper</div>
-                          </div>
-                        </div>
-                      </SelectItem>
-                      <SelectItem value="realvis-lightning">
-                        <div className="flex items-center justify-between w-full">
-                          <div>
-                            <div className="font-medium flex items-center gap-2">
-                              Realvis Lightning 
-                              <Badge variant="secondary" className="text-xs">Budget</Badge>
-                            </div>
-                            <div className="text-xs text-muted-foreground">Photo-realistic • 60-80% cheaper</div>
+                            <div className="text-xs text-muted-foreground">Fast & Creative • Cheapest option</div>
                           </div>
                         </div>
                       </SelectItem>

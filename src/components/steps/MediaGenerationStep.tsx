@@ -811,44 +811,26 @@ export const MediaGenerationStep = ({
                         <SelectTrigger id="image-model">
                           <SelectValue placeholder="Select model" />
                         </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="dreamshaper-lightning">
-                            <div className="flex items-center gap-2">
-                              <span>DreamShaper Lightning</span>
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="juggernaut-lightning">
-                            <div className="flex items-center gap-2">
-                              <span>Juggernaut Lightning</span>
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="realdream-lightning">
-                            <div className="flex items-center gap-2">
-                              <span>RealDream Lightning</span>
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="realvis-lightning">
-                            <div className="flex items-center gap-2">
-                              <span>RealVis Lightning</span>
-                              <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="seedream-4">
-                            <div className="flex items-center gap-2">
-                              <span>Seedream 4</span>
-                              <Badge variant="outline" className="text-xs">Premium</Badge>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="flux-1.1-pro-ultra">
-                            <div className="flex items-center gap-2">
-                              <span>Flux Pro Ultra</span>
-                              <Badge variant="outline" className="text-xs">Premium</Badge>
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
+                         <SelectContent>
+                           <SelectItem value="dreamshaper-lightning">
+                             <div className="flex items-center gap-2">
+                               <span>DreamShaper Lightning</span>
+                               <Badge variant="secondary" className="text-xs bg-green-100 text-green-700">Budget</Badge>
+                             </div>
+                           </SelectItem>
+                           <SelectItem value="seedream-4">
+                             <div className="flex items-center gap-2">
+                               <span>Seedream 4</span>
+                               <Badge variant="outline" className="text-xs">Standard</Badge>
+                             </div>
+                           </SelectItem>
+                           <SelectItem value="flux-1.1-pro-ultra">
+                             <div className="flex items-center gap-2">
+                               <span>Flux Pro Ultra</span>
+                               <Badge variant="outline" className="text-xs">Premium</Badge>
+                             </div>
+                           </SelectItem>
+                         </SelectContent>
                       </Select>
                     </div>
                     <div>
