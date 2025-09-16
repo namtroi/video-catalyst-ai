@@ -68,66 +68,87 @@ serve(async (req) => {
 
     const modelConfig = getModelConfig(model, quality);
 
-    // Generate images for all prompts
-    const imagePromises = prompts.map(async (prompt, index) => {
-      console.log(`Generating image ${index + 1}/${prompts.length}: ${prompt.substring(0, 50)}...`);
+    // Generate images in batches of 3 to avoid API rate limits and improve reliability
+    const batchSize = 3;
+    const results = [];
+    
+    const generateImageBatch = async (promptBatch: string[], startIndex: number) => {
+      const batchPromises = promptBatch.map(async (prompt, batchIndex) => {
+        const globalIndex = startIndex + batchIndex;
+        console.log(`Generating image ${globalIndex + 1}/${prompts.length}: ${prompt.substring(0, 50)}...`);
+        
+        try {
+          const response = await fetch(modelConfig.endpoint, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'x-api-key': segmindApiKey,
+            },
+            body: JSON.stringify({
+              prompt: prompt,
+              steps: modelConfig.steps,
+              seed: Math.floor(Math.random() * 2147483647),
+              ...modelConfig.params
+            }),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Segmind API error for prompt ${globalIndex + 1}:`, response.status, errorText);
+            throw new Error(`Segmind API error: ${response.status} ${errorText}`);
+          }
+
+          // Get binary image data and convert to base64
+          const arrayBuffer = await response.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          
+          // Convert to base64 using chunked approach to avoid call stack overflow
+          let binaryString = '';
+          const chunkSize = 1024;
+          for (let i = 0; i < uint8Array.length; i += chunkSize) {
+            const chunk = uint8Array.slice(i, i + chunkSize);
+            binaryString += String.fromCharCode(...chunk);
+          }
+          const base64Data = btoa(binaryString);
+          
+          console.log(`Successfully generated image ${globalIndex + 1}/${prompts.length}`);
+          
+          return {
+            promptId: `prompt-${globalIndex}`,
+            imageUrl: `data:image/jpeg;base64,${base64Data}`,
+            quality: quality,
+            model: model,
+            seed: Math.floor(Math.random() * 2147483647)
+          };
+        } catch (error) {
+          console.error(`Error generating image ${globalIndex + 1}:`, error);
+          return {
+            promptId: `prompt-${globalIndex}`,
+            imageUrl: null,
+            quality: quality,
+            model: model,
+            error: error.message
+          };
+        }
+      });
       
-      try {
-        const response = await fetch(modelConfig.endpoint, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': segmindApiKey,
-          },
-          body: JSON.stringify({
-            prompt: prompt,
-            steps: modelConfig.steps,
-            seed: Math.floor(Math.random() * 2147483647),
-            ...modelConfig.params
-          }),
-        });
+      return await Promise.all(batchPromises);
+    };
 
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(`Segmind API error for prompt ${index + 1}:`, response.status, errorText);
-          throw new Error(`Segmind API error: ${response.status} ${errorText}`);
-        }
-
-        // Get binary image data and convert to base64
-        const arrayBuffer = await response.arrayBuffer();
-        const uint8Array = new Uint8Array(arrayBuffer);
-        
-        // Convert to base64 using chunked approach to avoid call stack overflow
-        let binaryString = '';
-        const chunkSize = 1024;
-        for (let i = 0; i < uint8Array.length; i += chunkSize) {
-          const chunk = uint8Array.slice(i, i + chunkSize);
-          binaryString += String.fromCharCode(...chunk);
-        }
-        const base64Data = btoa(binaryString);
-        
-        console.log(`Successfully generated image ${index + 1}/${prompts.length}`);
-        
-        return {
-          promptId: `prompt-${index}`,
-          imageUrl: `data:image/jpeg;base64,${base64Data}`,
-          quality: quality,
-          model: model,
-          seed: Math.floor(Math.random() * 2147483647)
-        };
-      } catch (error) {
-        console.error(`Error generating image ${index + 1}:`, error);
-        return {
-          promptId: `prompt-${index}`,
-          imageUrl: null,
-          quality: quality,
-          model: model,
-          error: error.message
-        };
+    // Process prompts in batches
+    for (let i = 0; i < prompts.length; i += batchSize) {
+      const batch = prompts.slice(i, i + batchSize);
+      console.log(`Processing batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(prompts.length / batchSize)} (${batch.length} images)`);
+      
+      const batchResults = await generateImageBatch(batch, i);
+      results.push(...batchResults);
+      
+      // Add a small delay between batches to be API-friendly
+      if (i + batchSize < prompts.length) {
+        console.log('Waiting 200ms before next batch...');
+        await new Promise(resolve => setTimeout(resolve, 200));
       }
-    });
-
-    const results = await Promise.all(imagePromises);
+    }
     
     console.log(`Image generation complete. ${results.filter(r => r.imageUrl).length}/${results.length} successful`);
 
