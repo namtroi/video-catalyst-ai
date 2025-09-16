@@ -411,7 +411,7 @@ export default function Index() {
         <div className="h-16 border-b border-border flex items-center justify-between px-6 bg-card">
           <div className="flex items-center gap-3">
             <Youtube className="h-6 w-6 text-primary" />
-            <h1 className="text-lg font-semibold">YouTube Catalyst</h1>
+            <h1 className="text-lg font-semibold">Video Catalyst AI</h1>
             {userSettings && (
               <span className="text-sm text-muted-foreground px-2 py-1 bg-muted rounded">
                 {userSettings.selected_model === 'deepseek' ? 'Deepseek' : 'ChatGPT'}
