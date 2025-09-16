@@ -74,7 +74,7 @@ const Auth = () => {
         <CardHeader className="text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <Youtube className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">YouTube Catalyst</span>
+            <span className="text-2xl font-bold">Video Catalyst AI</span>
           </div>
           <CardTitle>Welcome</CardTitle>
           <CardDescription>
