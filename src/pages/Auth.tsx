@@ -80,7 +80,7 @@ const Auth = () => {
           <CardDescription>
             Sign in to access your AI-powered YouTube content creation tools
           </CardDescription>
-          <Alert className="mx-6 mb-4 border-primary/20 bg-primary/5">
+          <Alert className="mb-4 border-primary/20 bg-primary/5">
             <AlertDescription>
               <strong>For a quick demo without creating an account, use these credentials:</strong>
               <br />
