@@ -50,6 +50,7 @@ export const ThumbnailStep = ({
   const [imageModel, setImageModel] = useState<ImageModel>('seedream-4');
   const [isGeneratingImages, setIsGeneratingImages] = useState(false);
   const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
+  const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState<number>(-1);
 
   // Restore generated images from project data when component mounts
   useEffect(() => {
@@ -91,54 +92,84 @@ export const ThumbnailStep = ({
     }
 
     setIsGeneratingImages(true);
-    const loadingStates: Record<string, boolean> = {};
+    
+    // Initialize loading states for all prompts
+    const initialLoadingStates: Record<string, boolean> = {};
     prompts.forEach(prompt => {
-      loadingStates[prompt.id] = true;
+      initialLoadingStates[prompt.id] = true;
     });
-    setImageLoadingStates(loadingStates);
+    setImageLoadingStates(initialLoadingStates);
+
+    let successCount = 0;
+    const updatedPrompts = [...prompts];
 
     try {
-      const promptTexts = prompts.map(p => p.text);
-      
-      const { data, error } = await supabase.functions.invoke('generate-images', {
-        body: { 
-          prompts: promptTexts,
-          quality: imageQuality,
-          model: imageModel
+      // Generate images one by one with real-time updates
+      for (let i = 0; i < prompts.length; i++) {
+        const prompt = prompts[i];
+        setCurrentGeneratingIndex(i);
+        
+        try {
+          console.log(`Generating image ${i + 1}/${prompts.length}: ${prompt.text.substring(0, 50)}...`);
+          
+          const { data, error } = await supabase.functions.invoke('generate-single-image', {
+            body: { 
+              prompt: prompt.text,
+              quality: imageQuality,
+              model: imageModel,
+              promptId: prompt.id
+            }
+          });
+
+          if (error) throw error;
+
+          if (data?.success && data?.image) {
+            // Update the specific prompt with the generated image
+            updatedPrompts[i] = {
+              ...updatedPrompts[i],
+              imageUrl: data.image.imageUrl,
+              imageQuality: imageQuality,
+              imageModel: imageModel
+            };
+            
+            // Update state immediately to show the image
+            setPrompts([...updatedPrompts]);
+            
+            // Save to project data immediately
+            if (onGeneratedThumbnailsChange) {
+              onGeneratedThumbnailsChange([...updatedPrompts]);
+            }
+            
+            successCount++;
+            console.log(`Successfully generated image ${i + 1}/${prompts.length}`);
+          } else {
+            console.error(`Failed to generate image for prompt ${i + 1}`);
+          }
+        } catch (error: any) {
+          console.error(`Error generating image ${i + 1}:`, error);
         }
-      });
-
-      if (error) throw error;
-
-      if (data?.success && data?.images) {
-        const updatedPrompts = prompts.map((prompt, index) => {
-          const imageResult = data.images[index];
-          return {
-            ...prompt,
-            imageUrl: imageResult?.imageUrl || undefined,
-            imageQuality: imageQuality,
-            imageModel: imageModel
-          };
+        
+        // Remove loading state for this specific prompt
+        setImageLoadingStates(prev => {
+          const newStates = { ...prev };
+          delete newStates[prompt.id];
+          return newStates;
         });
         
-        setPrompts(updatedPrompts);
-        
-        // Save generated images to project data
-        if (onGeneratedThumbnailsChange) {
-          onGeneratedThumbnailsChange(updatedPrompts);
+        // Small delay between images to be API-friendly
+        if (i < prompts.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 300));
         }
-        
-        const successCount = data.images.filter((img: any) => img.imageUrl).length;
-        toast.success(`Generated ${successCount}/${prompts.length} thumbnail images successfully!`);
-      } else {
-        throw new Error('No images generated');
       }
+      
+      toast.success(`Generated ${successCount}/${prompts.length} thumbnail images successfully!`);
     } catch (error: any) {
-      console.error('Error generating images:', error);
-      toast.error(error.message || 'Failed to generate thumbnail images. Please try again.');
+      console.error('Error in image generation process:', error);
+      toast.error('Some images failed to generate. Please try again for failed images.');
     } finally {
       setIsGeneratingImages(false);
       setImageLoadingStates({});
+      setCurrentGeneratingIndex(-1);
     }
   };
 
@@ -433,7 +464,7 @@ export const ThumbnailStep = ({
               {isGeneratingImages ? (
                 <>
                   <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating {imageQuality.toUpperCase()} Images...
+                  Generating image {currentGeneratingIndex + 1} of {prompts.length}...
                 </>
               ) : (
                 `Generate ${imageQuality.toUpperCase()} Images (${prompts.length})`
