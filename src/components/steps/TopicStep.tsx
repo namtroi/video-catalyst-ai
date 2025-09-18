@@ -107,6 +107,7 @@ export const TopicStep = ({
                   </DialogHeader>
                   <TemplateManager 
                     onTemplateSelect={handleTemplateSelect}
+                    onTemplatesChanged={refreshTemplates}
                   />
                 </DialogContent>
               </Dialog>

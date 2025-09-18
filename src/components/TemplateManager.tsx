@@ -12,9 +12,10 @@ import { useToast } from '@/components/ui/use-toast';
 
 interface TemplateManagerProps {
   onTemplateSelect: (template: Template) => void;
+  onTemplatesChanged?: () => void;
 }
 
-export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
+export const TemplateManager = ({ onTemplateSelect, onTemplatesChanged }: TemplateManagerProps) => {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -100,6 +101,7 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
         });
       }
       await loadTemplates();
+      onTemplatesChanged?.();
       setIsDialogOpen(false);
       resetForm();
     } catch (error) {
@@ -121,6 +123,7 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
         description: "Template deleted successfully",
       });
       await loadTemplates();
+      onTemplatesChanged?.();
     } catch (error) {
       toast({
         title: "Error",
@@ -162,6 +165,7 @@ export const TemplateManager = ({ onTemplateSelect }: TemplateManagerProps) => {
         description: "Template duplicated successfully",
       });
       await loadTemplates();
+      onTemplatesChanged?.();
     } catch (error) {
       toast({
         title: "Error",
