@@ -24,9 +24,7 @@ import {
   Save,
   BookMarked,
   Loader2,
-  RefreshCw,
-  Eye,
-  AlertCircle
+  RefreshCw
 } from 'lucide-react';
 import { VideoProject, Scene, ScenesResponse, ProductionImageOption, ImageModel } from '@/types';
 import { supabase } from '@/integrations/supabase/client';
@@ -75,8 +73,6 @@ export const MediaGenerationStep = ({
   const [isRegeneratingThumbnails, setIsRegeneratingThumbnails] = useState(false);
   const [selectedImageModel, setSelectedImageModel] = useState<ImageModel>('seedream-4');
   const [selectedImageQuality, setSelectedImageQuality] = useState<'standard' | '4k'>('standard');
-  const [imageLoadingStates, setImageLoadingStates] = useState<Record<string, boolean>>({});
-  const [currentGeneratingIndex, setCurrentGeneratingIndex] = useState<number>(-1);
 
   const copyToClipboard = async (text: string, label: string) => {
     try {
@@ -311,205 +307,47 @@ export const MediaGenerationStep = ({
       return;
     }
 
-    const prompts = scenes.map(scene => scene.image_prompt).filter(prompt => prompt.trim());
-    
-    // Create initial production images with prompts
-    const initialProductionImages: ProductionImageOption[] = prompts.map((prompt, index) => ({
-      id: crypto.randomUUID(),
-      sceneNumber: scenes[index]?.scene_number || index + 1,
-      imagePrompt: prompt,
-      imageQuality: selectedImageQuality,
-      imageModel: selectedImageModel
-    }));
-
     setIsGeneratingImages(true);
-    
-    // Initialize loading states for all images
-    const initialLoadingStates: Record<string, boolean> = {};
-    initialProductionImages.forEach(image => {
-      initialLoadingStates[image.id] = true;
-    });
-    setImageLoadingStates(initialLoadingStates);
-
-    let successCount = 0;
-    const updatedImages = [...initialProductionImages];
-
     try {
-      // Generate images one by one with real-time updates
-      for (let i = 0; i < initialProductionImages.length; i++) {
-        const productionImage = initialProductionImages[i];
-        setCurrentGeneratingIndex(i);
-        
-        try {
-          console.log(`Generating production image ${i + 1}/${initialProductionImages.length}: ${productionImage.imagePrompt.substring(0, 50)}...`);
-          
-          const { data, error } = await supabase.functions.invoke('generate-single-image', {
-            body: { 
-              prompt: productionImage.imagePrompt,
-              quality: selectedImageQuality,
-              model: selectedImageModel,
-              promptId: productionImage.id
-            }
-          });
-
-          if (error) {
-            console.error(`Error generating image for scene ${productionImage.sceneNumber}:`, error);
-            updatedImages[i] = {
-              ...updatedImages[i],
-              hasError: true,
-              errorMessage: error.message || 'Failed to generate image',
-              errorType: 'unknown'
-            };
-            onGeneratedProductionImagesChange?.(updatedImages);
-            continue;
-          }
-
-          if (!data?.success) {
-            const errorMsg = data?.error || 'Failed to generate image';
-            const errorType = data?.errorType || 'unknown';
-            console.error(`Failed to generate image for scene ${productionImage.sceneNumber}:`, errorMsg);
-            updatedImages[i] = {
-              ...updatedImages[i],
-              hasError: true,
-              errorMessage: errorMsg,
-              errorType: errorType
-            };
-            onGeneratedProductionImagesChange?.(updatedImages);
-            continue;
-          }
-
-          if (data?.success && data?.image) {
-            // Update the specific image with the generated result
-            updatedImages[i] = {
-              ...updatedImages[i],
-              imageUrl: data.image.imageUrl,
-              imageQuality: selectedImageQuality,
-              imageModel: selectedImageModel
-            };
-            
-            // Update state immediately to show the image
-            onGeneratedProductionImagesChange?.(updatedImages);
-            
-            successCount++;
-            console.log(`Successfully generated production image ${i + 1}/${initialProductionImages.length}`);
-          } else {
-            console.error(`Failed to generate production image for scene ${productionImage.sceneNumber}`);
-          }
-        } catch (error: any) {
-          console.error(`Error generating production image ${i + 1}:`, error);
-        }
-        
-        // Remove loading state for this specific image
-        setImageLoadingStates(prev => {
-          const newStates = { ...prev };
-          delete newStates[productionImage.id];
-          return newStates;
-        });
-        
-        // Small delay between images to be API-friendly
-        if (i < initialProductionImages.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      }
+      const prompts = scenes.map(scene => scene.image_prompt).filter(prompt => prompt.trim());
       
-      toast({
-        title: "Production Images Complete!",
-        description: `Generated ${successCount}/${initialProductionImages.length} production images successfully!`,
+      const { data, error } = await supabase.functions.invoke('generate-images', {
+        body: {
+          prompts,
+          quality: selectedImageQuality,
+          model: selectedImageModel
+        }
       });
-    } catch (error: any) {
-      console.error('Error in production image generation process:', error);
+
+      if (error) throw error;
+
+      if (data && data.images) {
+        const newProductionImages: ProductionImageOption[] = data.images.map((img: any, index: number) => ({
+          id: crypto.randomUUID(),
+          sceneNumber: scenes[index]?.scene_number || index + 1,
+          imagePrompt: prompts[index] || '',
+          imageUrl: img.imageUrl,
+          imageQuality: selectedImageQuality,
+          imageModel: selectedImageModel
+        }));
+
+        const updatedImages = [...(project.generatedProductionImages || []), ...newProductionImages];
+        onGeneratedProductionImagesChange?.(updatedImages);
+
+        toast({
+          title: "Images Generated!",
+          description: `Successfully generated ${newProductionImages.length} production images`,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to generate production images:', error);
       toast({
-        title: "Generation Error",
-        description: "Some images failed to generate. Please try again for failed images.",
+        title: "Generation Failed",
+        description: "Failed to generate production images. Please try again.",
         variant: "destructive",
       });
     } finally {
       setIsGeneratingImages(false);
-      setImageLoadingStates({});
-      setCurrentGeneratingIndex(-1);
-    }
-  };
-
-  const retryProductionImage = async (imageId: string) => {
-    const existingImages = project.generatedProductionImages || [];
-    const imageIndex = existingImages.findIndex(img => img.id === imageId);
-    
-    if (imageIndex === -1) return;
-
-    const imageToRetry = existingImages[imageIndex];
-    const updatedImages = [...existingImages];
-    
-    // Clear error state and set loading
-    updatedImages[imageIndex] = {
-      ...updatedImages[imageIndex],
-      hasError: false,
-      errorMessage: undefined,
-      errorType: undefined
-    };
-    onGeneratedProductionImagesChange?.(updatedImages);
-    setImageLoadingStates(prev => ({ ...prev, [imageId]: true }));
-    
-    try {
-      const { data, error } = await supabase.functions.invoke('generate-single-image', {
-        body: { 
-          prompt: imageToRetry.imagePrompt,
-          quality: imageToRetry.imageQuality || selectedImageQuality,
-          model: imageToRetry.imageModel || selectedImageModel,
-          promptId: imageToRetry.id
-        }
-      });
-
-      if (error) {
-        updatedImages[imageIndex] = {
-          ...updatedImages[imageIndex],
-          hasError: true,
-          errorMessage: error.message || 'Failed to regenerate image',
-          errorType: 'unknown'
-        };
-        onGeneratedProductionImagesChange?.(updatedImages);
-        return;
-      }
-
-      if (!data?.success) {
-        updatedImages[imageIndex] = {
-          ...updatedImages[imageIndex],
-          hasError: true,
-          errorMessage: data?.error || 'Failed to regenerate image',
-          errorType: data?.errorType || 'unknown'
-        };
-        onGeneratedProductionImagesChange?.(updatedImages);
-        return;
-      }
-
-      if (data?.success && data?.image) {
-        updatedImages[imageIndex] = {
-          ...updatedImages[imageIndex],
-          imageUrl: data.image.imageUrl,
-          imageQuality: imageToRetry.imageQuality || selectedImageQuality,
-          imageModel: imageToRetry.imageModel || selectedImageModel
-        };
-        onGeneratedProductionImagesChange?.(updatedImages);
-        
-        toast({
-          title: "Success!",
-          description: `Production image for scene ${imageToRetry.sceneNumber} regenerated successfully!`,
-        });
-      }
-    } catch (error: any) {
-      console.error('Error retrying production image:', error);
-      updatedImages[imageIndex] = {
-        ...updatedImages[imageIndex],
-        hasError: true,
-        errorMessage: 'Failed to regenerate image',
-        errorType: 'unknown'
-      };
-      onGeneratedProductionImagesChange?.(updatedImages);
-    } finally {
-      setImageLoadingStates(prev => {
-        const newStates = { ...prev };
-        delete newStates[imageId];
-        return newStates;
-      });
     }
   };
 
@@ -993,10 +831,7 @@ export const MediaGenerationStep = ({
                     {isGeneratingImages ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        {currentGeneratingIndex >= 0 
-                          ? `Generating Image ${currentGeneratingIndex + 1} of ${scenes.length}...`
-                          : 'Generating Images...'
-                        }
+                        Generating Images...
                       </>
                     ) : (
                       <>
@@ -1009,148 +844,36 @@ export const MediaGenerationStep = ({
               )}
 
               {/* Generated Production Images */}
-              {(project.generatedProductionImages && project.generatedProductionImages.length > 0) || isGeneratingImages && (
+              {project.generatedProductionImages && project.generatedProductionImages.length > 0 && (
                 <div className="space-y-4">
-                  <h4 className="font-medium text-foreground print:text-black">
-                    Generated Production Images
-                    {isGeneratingImages && currentGeneratingIndex >= 0 && (
-                      <span className="text-sm font-normal text-muted-foreground ml-2">
-                        (Generating {currentGeneratingIndex + 1} of {parseScenes(project.imageVideoPrompts || '').length}...)
-                      </span>
-                    )}
-                  </h4>
+                  <h4 className="font-medium text-foreground print:text-black">Generated Production Images</h4>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {project.generatedProductionImages?.map((image) => (
+                    {project.generatedProductionImages.map((image) => (
                       <div key={image.id} className="border rounded-lg overflow-hidden">
-                        {imageLoadingStates[image.id] ? (
-                          <div className="aspect-video bg-muted flex items-center justify-center">
-                            <div className="text-center space-y-2">
-                              <Loader2 className="w-6 h-6 animate-spin mx-auto" />
-                              <div className="text-sm text-muted-foreground">Generating...</div>
-                            </div>
-                          </div>
-                        ) : image.imageUrl ? (
+                        {image.imageUrl && (
                           <>
-                            <div className="relative group aspect-video">
-                              <img 
-                                src={image.imageUrl} 
-                                alt={`Scene ${image.sceneNumber} production image`}
-                                className="w-full h-full object-cover"
-                              />
-                              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100">
-                                <div className="flex gap-2">
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={() => {
-                                      // View full size like in ThumbnailStep
-                                      fetch(image.imageUrl!)
-                                        .then(res => res.blob())
-                                        .then(blob => {
-                                          const objectUrl = URL.createObjectURL(blob);
-                                          const newWindow = window.open(objectUrl, '_blank');
-                                          setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
-                                        })
-                                        .catch(() => window.open(image.imageUrl!, '_blank'));
-                                    }}
-                                  >
-                                    <Eye className="w-3 h-3 mr-1" />
-                                    View
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    variant="secondary"
-                                    onClick={async () => {
-                                      try {
-                                        const response = await fetch(image.imageUrl!);
-                                        const blob = await response.blob();
-                                        const url = window.URL.createObjectURL(blob);
-                                        const link = document.createElement('a');
-                                        link.href = url;
-                                        link.download = `production-scene-${image.sceneNumber}.jpg`;
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
-                                        window.URL.revokeObjectURL(url);
-                                        toast({
-                                          title: "Success!",
-                                          description: "Production image downloaded successfully!",
-                                        });
-                                      } catch (error) {
-                                        toast({
-                                          title: "Error",
-                                          description: "Failed to download image",
-                                          variant: "destructive",
-                                        });
-                                      }
-                                    }}
-                                  >
-                                    <Download className="w-3 h-3 mr-1" />
-                                    Download
-                                  </Button>
-                                </div>
-                              </div>
-                              <div className="absolute top-2 right-2 flex gap-1">
+                            <img 
+                              src={image.imageUrl} 
+                              alt={`Scene ${image.sceneNumber} production image`}
+                              className="w-full h-32 object-cover"
+                            />
+                            <div className="p-3 space-y-2">
+                              <div className="flex items-center justify-between">
                                 <Badge variant="outline">Scene {image.sceneNumber}</Badge>
-                                {image.imageQuality && (
-                                  <Badge 
-                                    variant={image.imageQuality === '4k' ? 'default' : 'secondary'}
-                                  >
+                                <div className="flex gap-1">
+                                  <Badge variant="secondary" className="text-xs">
                                     {image.imageQuality === '4k' ? '4K' : 'HD'}
                                   </Badge>
-                                )}
-                                {image.imageModel && (
-                                  <Badge 
-                                    variant="outline"
-                                    className="text-xs"
-                                  >
+                                  <Badge variant="secondary" className="text-xs">
                                     {image.imageModel === 'flux-1.1-pro-ultra' ? 'Flux' : 'Seedream'}
                                   </Badge>
-                                )}
+                                </div>
                               </div>
-                            </div>
-                            <div className="p-3 space-y-2">
                               <p className="text-sm text-muted-foreground line-clamp-2">
                                 {image.imagePrompt}
                               </p>
                             </div>
                           </>
-                        ) : image.hasError ? (
-                          <div className="aspect-video bg-destructive/5 flex items-center justify-center border-2 border-dashed border-destructive/50">
-                            <div className="text-center space-y-2 p-4">
-                              <AlertCircle className="w-6 h-6 mx-auto text-destructive" />
-                              <div className="text-sm font-medium text-destructive">Generation Failed</div>
-                              <div className="text-xs text-destructive/80">
-                                {image.errorMessage || 'Unknown error occurred'}
-                              </div>
-                              <div className="space-y-1">
-                                <Badge variant="outline">Scene {image.sceneNumber}</Badge>
-                                <p className="text-xs text-muted-foreground line-clamp-2">
-                                  {image.imagePrompt}
-                                </p>
-                              </div>
-                              {!isReadOnly && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="text-xs mt-2"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    retryProductionImage(image.id);
-                                  }}
-                                >
-                                  <RefreshCw className="w-3 h-3 mr-1" />
-                                  Retry
-                                </Button>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <ImageFallback 
-                            title={`Scene ${image.sceneNumber} Image`}
-                            onRegenerate={!isReadOnly ? () => retryProductionImage(image.id) : undefined}
-                            className="aspect-video"
-                          />
                         )}
                       </div>
                     ))}

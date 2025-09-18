@@ -72,9 +72,6 @@ export interface ProductionImageOption {
   imageUrl?: string;
   imageQuality?: 'standard' | '4k';
   imageModel?: ImageModel;
-  hasError?: boolean;
-  errorMessage?: string;
-  errorType?: string;
 }
 
 export interface ImageGenerationRequest {
