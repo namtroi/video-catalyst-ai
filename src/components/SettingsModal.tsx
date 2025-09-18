@@ -16,6 +16,7 @@ import { AIModel } from '@/services/aiService';
 interface SettingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSettingsChange?: () => void;
 }
 
 interface UserSettings {
@@ -25,7 +26,7 @@ interface UserSettings {
   segmind_api_key_set: boolean;
 }
 
-export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
+export const SettingsModal = ({ open, onOpenChange, onSettingsChange }: SettingsModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -106,6 +107,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
       if (error) throw error;
 
       await loadUserSettings();
+      onSettingsChange?.();
 
       toast({
         title: "Success",
@@ -199,6 +201,7 @@ export const SettingsModal = ({ open, onOpenChange }: SettingsModalProps) => {
       if (error) throw error;
 
       await loadUserSettings();
+      onSettingsChange?.();
 
       const modelName = model === 'deepseek' ? 'Deepseek Chat' : 
                         model === 'openai-gpt4o-mini' ? 'OpenAI GPT-4o Mini' : 

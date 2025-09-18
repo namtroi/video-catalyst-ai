@@ -449,6 +449,7 @@ export default function Index() {
       <SettingsModal 
         open={showSettings} 
         onOpenChange={setShowSettings} 
+        onSettingsChange={loadUserSettings}
       />
     </div>
   );
